@@ -34,6 +34,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     on each function.
   - A seeded component-template library so a freshly claimed tag has a useful mechanics HUD
     before any manual data entry.
+- **Type surface and domain logic.** `types/servicecard.ts` models the four log categories
+  as a discriminated union over `category`, and fuel versus charging as one over `mode`.
+  Zod schemas in `lib/validation/` are the single definition, shared by the client form and
+  the server action — a device offline for days cannot be trusted to have validated
+  correctly, so the server re-checks with the same schema.
+- **Offline write queue** (`lib/offline/`) — the one custom component in the feature, built
+  against a documented framework gap. Entries are accepted with no connectivity, delivered
+  exactly once, retried with capped exponential backoff, and never discarded: a record
+  leaves the queue only on a confirmed acknowledgement, and one that stops being retryable
+  is surfaced as stuck rather than dropped.
+- Pure calculation modules for fuel economy, EV efficiency, odometer plausibility, service
+  reminders and effective-spec resolution, kept free of I/O so they stay inside the unit
+  layer's 10ms budget.
+- On-device photo compression using native browser APIs — `createImageBitmap` with
+  `imageOrientation: 'from-image'` and `OffscreenCanvas` in a worker. The framework-first
+  gate passed, so no third-party library was added.
 
 ### Changed
 - Pre-commit test gate now enforces Article V's three-layer separation rather than a
