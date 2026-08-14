@@ -1,0 +1,45 @@
+{
+  "$comment": [
+    "Where each kind of source file is required to be covered, per Article V's three-layer separation.",
+    "",
+    "The default pre-commit gate asks whether a source file has a co-located test of",
+    "the same name. That is the right question for pure logic and the wrong question",
+    "for a React Server Component or a Server Action: a `page.test.tsx` that reaches",
+    "PostgreSQL is neither 100% mocked nor under 10ms, so it would not be a unit test",
+    "under Article V — writing one to satisfy a filename check produces test theatre",
+    "and dilutes a suite that currently catches real defects.",
+    "",
+    "This policy keeps the gate strict where mocked unit tests genuinely belong, and",
+    "redirects it to the correct layer everywhere else. Coverage is still mandatory;",
+    "only its location changes."
+  ],
+
+  "requireColocatedTest": {
+    "$comment": "Pure logic. Cheap to test in isolation, and where the highest-value assertions live. A new file here must ship with <leaf>.test.ts.",
+    "prefixes": ["lib/"]
+  },
+
+  "coveredByLayer": [
+    {
+      "prefix": "app/",
+      "layer": "tests/ux/e2e",
+      "reason": "Routes, Server Actions and RSC pages are exercised end to end with real browser events (Article V, UX layer)."
+    },
+    {
+      "prefix": "components/",
+      "layer": "tests/ux/e2e",
+      "reason": "Interactive components are exercised through the journeys that use them, with cypress-real-events."
+    },
+    {
+      "prefix": "supabase/",
+      "layer": "tests/integration",
+      "reason": "Schema, policies and RPCs are exercised against real PostgreSQL via testcontainers — never a mocked driver."
+    }
+  ],
+
+  "notSourceLogic": {
+    "$comment": "Declarations, configuration, operational tooling and the test suites themselves. Nothing here carries product logic that a unit test could meaningfully assert.",
+    "prefixes": ["types/", "tests/", "scripts/", ".forge/"],
+    "patterns": ["*.config.ts", "*.config.mjs", "instrumentation.ts", "proxy.ts", "middleware.ts"]
+  }
+}

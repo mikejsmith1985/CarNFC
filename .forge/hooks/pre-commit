@@ -39,6 +39,24 @@ if [[ -n "$new_source_files" ]]; then
         # Skip files that are themselves test files (every supported convention).
         if echo "$base" | grep -qE '(_test\.go|\.test\.(js|jsx|ts|tsx)|\.spec\.(js|jsx|ts|tsx)|_test\.py|_test\.rs|Tests?\.cs|(Test|Tests|IT)\.java)$'; then continue; fi
         if echo "$base" | grep -qE '^test_.*\.py$'; then continue; fi
+
+        # ── Article V coverage policy ────────────────────────────────────
+        # "Does this file have a co-located test?" is the right question for
+        # pure logic and the wrong one for a Server Component or Server Action:
+        # a test that reaches PostgreSQL is neither mocked nor under 10ms, so it
+        # is not a unit test under Article V. .forge/test-coverage-policy.json
+        # says which layer covers which paths; coverage stays mandatory, only
+        # its location changes. Absent the policy, the original rule applies.
+        if command -v node >/dev/null 2>&1 && [[ -f .forge/hooks/coverage-policy.js ]]; then
+            verdict=$(node .forge/hooks/coverage-policy.js "$new_file" 2>/dev/null || echo colocated)
+            case "$verdict" in
+                skip)   continue ;;
+                layer:*) continue ;;
+                empty:*)
+                    violations+=("TEST FILE: '$new_file' is covered by ${verdict#empty:}, which contains no tests")
+                    continue ;;
+            esac
+        fi
         extension="${new_file##*.}"
         leaf="${base%.*}"
         has_test=false
