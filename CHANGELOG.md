@@ -71,6 +71,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `imageOrientation: 'from-image'` and `OffscreenCanvas` in a worker. The framework-first
   gate passed, so no third-party library was added.
 
+- **Integration suite against real PostgreSQL** via testcontainers, applying the real
+  migrations and exercising the real policies — no mocked drivers. Covers owner isolation,
+  append-only privileges, the grant surface, every CHECK constraint, override precedence
+  and tombstone fallback, both `SECURITY DEFINER` guest paths, and the outbox driven end to
+  end: an insert that loses its acknowledgement still yields one row, 100 offline entries
+  arrive complete, and a device whose clock runs three days fast does not win precedence.
+- **Cypress UX suite** using `cypress-real-events`, launched via `run-dev-clean.ps1`.
+  Covers the scan-to-card journey, the four-category field swap, claiming, energy logging,
+  passport sharing, offline capture, and an automated audit of touch targets, contrast and
+  responsive layout.
+
 ### Changed
 - Pre-commit test gate now enforces Article V's three-layer separation rather than a
   co-located filename convention. `.forge/test-coverage-policy.json` declares which layer
