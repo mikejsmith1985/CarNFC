@@ -19,6 +19,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reach a browser bundle (Article IX).
 - `scripts/local-release.ps1`, verifying and publishing entirely on the local machine —
   never a GitHub Actions runner (Article VIII).
+- **ServiceCard database schema** in `lib/supabase/schema.sql`: 14 tables, 3 views, 5 RPCs,
+  Row Level Security forced on every table, and a private attachments bucket.
+  - Service and energy history is append-only. An edit writes a superseding revision and a
+    delete writes a tombstone, so two devices that both acted offline converge without
+    either one's work disappearing — and a shared record cannot be quietly rewritten.
+  - Ordering reads `server_received_at` only. The specification assumes a phone's clock may
+    be wrong, so a device clock never decides whose edit survives.
+  - Revision ids are client-generated UUIDv7, which turns exactly-once delivery into a
+    database constraint (`ON CONFLICT DO NOTHING`) rather than queue bookkeeping.
+  - Two `SECURITY DEFINER` guest paths, `resolve_tag` and `get_public_passport`, are the
+    only routes to vehicle data without a session. Cost and owner-identity redaction happen
+    in SQL, so a client bug cannot leak them. Their security review is recorded as a comment
+    on each function.
+  - A seeded component-template library so a freshly claimed tag has a useful mechanics HUD
+    before any manual data entry.
 
 ### Changed
 - Pre-commit test gate now enforces Article V's three-layer separation rather than a
