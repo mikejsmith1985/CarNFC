@@ -47,6 +47,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pure calculation modules for fuel economy, EV efficiency, odometer plausibility, service
   reminders and effective-spec resolution, kept free of I/O so they stay inside the unit
   layer's 10ms budget.
+- **Component Service Card** at `/v/[vehicle_id]/c/[component_id]`: mechanics HUD with
+  aftermarket overrides flagged against the factory value, history timeline, reminders and
+  quick log actions. Header and HUD render outside Suspense so the torque figure paints
+  before the 2019 history.
+- **Tag resolver** at `/t/[tag_id]`, redirecting to the card, the claim flow, or an
+  information-free error state — `forbidden` and `unknown` are indistinguishable, so the
+  tag space cannot be used to enumerate claimed tags.
+- `LogModal` covering all four categories with the field set swapping per category, and
+  `EnergyLogger` computing MPG, mi/kWh, Wh/mi and cost per mile live.
+- **Email one-time-code sign-in**, no password path anywhere. The scanned address survives
+  the round trip via a `next` parameter, sanitized against open redirects.
+- **Two-step claim wizard** — a vehicle can be created inside the flow so a first-ever
+  claim never loses the pending tag id, and an energy-port template is refused when the
+  powertrain cannot use it.
+- **Shareable vehicle passport** at `/p/[share_token]`: read-only, no account needed, off
+  by default. Only the token's SHA-256 hash is stored, revoked rows are retained forever so
+  a re-minted link cannot revive an old token, and the page carries `noindex` with no
+  OpenGraph metadata so a pasted link cannot expand into a preview of the history.
+- `SyncIndicator`, `StalenessBanner` and a sign-out guarded against discarding entries that
+  have not reached the server.
 - On-device photo compression using native browser APIs — `createImageBitmap` with
   `imageOrientation: 'from-image'` and `OffscreenCanvas` in a worker. The framework-first
   gate passed, so no third-party library was added.

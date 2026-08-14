@@ -1,0 +1,97 @@
+/* ServiceCard theme. Tailwind 4 is CSS-first, so the palette lives here and not in a JS config. */
+
+@import 'tailwindcss';
+
+/*
+  One committed high-contrast dark theme, not a `dark:` variant.
+
+  The spec has no light-mode requirement, and shipping a single palette removes
+  an entire class of contrast bugs. Every pairing below was chosen to clear 4.5:1
+  against its background (SC-008), which is auditable here in one file rather
+  than scattered across class names.
+
+  Contrast against --color-surface (#12151a):
+    text-primary   #f5f7fa -> 15.8:1
+    text-secondary #b6c0cc ->  8.7:1
+    text-muted     #8a96a5 ->  5.4:1
+*/
+@theme {
+  /* Surfaces — near-black rather than pure black, which reduces smear on OLED
+     panels when a phone is moving in someone's hand under a vehicle. */
+  --color-surface: #12151a;
+  --color-surface-raised: #1a1f27;
+  --color-surface-sunken: #0c0e12;
+  --color-border: #2b323d;
+  --color-border-strong: #3d4653;
+
+  /* Text */
+  --color-text-primary: #f5f7fa;
+  --color-text-secondary: #b6c0cc;
+  --color-text-muted: #8a96a5;
+  --color-text-inverse: #0c0e12;
+
+  /* Category colours. Each is paired with an icon and a text label in the UI,
+     because colour alone is not a distinguishing signal (FR-012). */
+  --color-maintenance: #34d399;
+  --color-repair: #fbbf24;
+  --color-replace: #60a5fa;
+  --color-upgrade: #c084fc;
+
+  /* Status */
+  --color-accent: #38bdf8;
+  --color-accent-strong: #0ea5e9;
+  --color-danger: #f87171;
+  --color-warning: #fbbf24;
+  --color-success: #34d399;
+  --color-pending: #94a3b8;
+
+  /* Minimum touch target — 48px, enforced structurally by components/ui (FR-014). */
+  --spacing-touch: 3rem;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace;
+
+  --radius-card: 0.75rem;
+}
+
+/* The viewer's browser may sit in light mode; this app does not follow it. */
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  /* Never scroll horizontally, at any width from 320px up (SC-010). */
+  overflow-x: hidden;
+}
+
+body {
+  /* Respect the notch and the home indicator; a quick action must not sit under either. */
+  padding-bottom: env(safe-area-inset-bottom);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Numeric specifications are read at a glance, often at an angle. Tabular figures
+   stop digits from shifting position between values. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+/* Focus must stay clearly visible: this app is used with gloves and in bad light. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
