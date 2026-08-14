@@ -91,4 +91,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **No table privileges existed at all — the application was dead on arrival.** Row Level
+  Security decides which *rows* a role may touch; it does not grant permission to touch the
+  table, and PostgreSQL refuses the statement before any policy is consulted. The schema
+  relied on Supabase's ambient default privileges, which attach to a specific creating role
+  and do not extend to tables created by the migration role, so every query for every role
+  was denied. The integration harness had been granting `ALL` up front, making it strictly
+  more permissive than production — the whole suite passed against a schema that could not
+  work. Privileges are now enumerated explicitly per table, the harness grants nothing, and
+  the grant surface is asserted directly. Found by starting the real local stack.
+- Views needed their own grants: every underlying table was readable and the card still
+  failed on `v_current_service_revisions`.
+- `EXECUTE` is granted to `PUBLIC` by default, so `anon` could invoke the owner-facing
+  RPCs. Revoked from `PUBLIC` and granted only where intended.
+- **Append-only was enforceable only by Row Level Security, which `service_role` bypasses.**
+  `service_role` holds `BYPASSRLS`, so any server-side path holding the service key could
+  have rewritten or erased a recorded revision — the exact thing the append-only model
+  exists to prevent. `UPDATE` and `DELETE` are now revoked on both revision tables, so
+  immutability holds twice over: no policy, and no privilege.
+- **The energy logger could never compute economy.** The component card rendered it without
+  the previous odometer reading, so every interval resolved to "first entry" and MPG,
+  mi/kWh and cost-per-mile were permanently blank — the whole purpose of a fuel-door tag.
+  Found by the browser assertion that 300 miles on 20 gallons is 15.0 mpg.
+- **`robots.txt` was redirected to sign-in by the proxy**, so a crawler would never have
+  read `Disallow: /p/` — removing a layer of the passport privacy defense.
+- **The root route did not exist.** `GET /` returned 404, dead-ending anyone opening the
+  bare domain or launching the installed app from a home screen.
+- A back link on the vehicle overview measured 19px against the 48px touch-target floor.
+  Found by the automated touch-target audit.
+- `checkOdometer` no longer formats its own message. Locale formatting moved to
+  `describeOdometerWarning`, keeping a function that runs on every keystroke free of ICU
+  initialization.
+- UUIDv7 ids generated within the same millisecond did not sort. The outbox drains in
+  bursts, so the monotonic counter RFC 9562 reserves is now used.
+
 ### Removed

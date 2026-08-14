@@ -85,5 +85,29 @@ for (const rule of policy.coveredByLayer || []) {
   }
 }
 
-// Everything else — pure logic included — keeps the co-located requirement.
+// Within a co-located path, an I/O adapter cannot have a mocked unit test:
+// it exists to talk to IndexedDB, Supabase or the filesystem, and a test that
+// does so is an integration test by definition. Pure logic keeps the
+// requirement; adapters delegate. Detected from the source rather than a
+// hand-maintained list, so it stays true as the tree grows.
+const IO_MARKERS = [
+  "'use client'",
+  '"use client"',
+  "'server-only'",
+  '@supabase/',
+  "from 'idb'",
+  'node:fs',
+  "from 'next/",
+  'navigator.',
+]
+
+if (existsSync(filePath)) {
+  const source = readFileSync(filePath, 'utf8')
+  if (IO_MARKERS.some((marker) => source.includes(marker))) {
+    process.stdout.write('layer:tests/integration')
+    process.exit(0)
+  }
+}
+
+// Everything else — pure logic — keeps the co-located requirement.
 process.stdout.write('colocated')

@@ -40,6 +40,6 @@
   "notSourceLogic": {
     "$comment": "Declarations, configuration, operational tooling and the test suites themselves. Nothing here carries product logic that a unit test could meaningfully assert.",
     "prefixes": ["types/", "tests/", "scripts/", ".forge/"],
-    "patterns": ["*.config.ts", "*.config.mjs", "instrumentation.ts", "proxy.ts", "middleware.ts"]
+    "patterns": ["*.config.ts", "*.config.mjs", "instrumentation.ts", "proxy.ts", "middleware.ts", "constants.ts"]
   }
 }
