@@ -6,6 +6,7 @@ describe('log categories (US2)', () => {
   beforeEach(() => {
     cy.signInAsDemoOwner()
     cy.visit(cardPath(DEMO.components.frontDiff))
+    cy.get('[data-ready="true"]')
     cy.contains('button', 'Service').realClick()
   })
 
@@ -69,6 +70,7 @@ describe('entry friction budget (FR-028, SC-003)', () => {
   it('saves a maintenance entry in at most five interactions and under 45 seconds', () => {
     cy.signInAsDemoOwner()
     cy.visit(cardPath(DEMO.components.frontDiff))
+    cy.get('[data-ready="true"]')
 
     const startedAt = Date.now()
     let interactions = 0
@@ -100,6 +102,7 @@ describe('upgrade overrides the HUD (FR-009)', () => {
   it('shows a custom torque as non-factory after reload', () => {
     cy.signInAsDemoOwner()
     cy.visit(cardPath(DEMO.components.frontDiff))
+    cy.get('[data-ready="true"]')
 
     cy.contains('button', 'Upgrade').realClick()
     cy.contains('label', 'Brand').find('input').type('ARB')
@@ -111,6 +114,7 @@ describe('upgrade overrides the HUD (FR-009)', () => {
     cy.contains('button', 'Save entry').realClick()
 
     cy.visit(cardPath(DEMO.components.frontDiff))
+    cy.get('[data-ready="true"]')
 
     // The effective value is what a torque wrench gets set to, and it must be
     // unmistakably flagged as no longer the factory figure.

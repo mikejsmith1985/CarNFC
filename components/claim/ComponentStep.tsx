@@ -9,6 +9,7 @@ import { TextField } from '@/components/ui/Field'
 import { claimTag } from '@/app/actions/claim'
 import { filterCompatibleTemplates, type ComponentTemplateSummary } from '@/lib/claim/compatibility'
 import type { VehicleOption } from '@/components/claim/VehicleStep'
+import { hydrationMarker, useIsHydrated } from '@/components/ui/useIsHydrated'
 
 export interface TemplateOption extends ComponentTemplateSummary {
   sortOrder: number
@@ -31,6 +32,7 @@ interface ComponentStepProps {
  */
 export function ComponentStep({ tagId, vehicle, templates, onBack }: ComponentStepProps) {
   const router = useRouter()
+  const isReady = useIsHydrated()
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [customName, setCustomName] = useState('')
   const [isCustom, setIsCustom] = useState(false)
@@ -70,7 +72,7 @@ export function ComponentStep({ tagId, vehicle, templates, onBack }: ComponentSt
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" {...hydrationMarker(isReady)}>
       <div>
         <h2 className="text-sm font-bold uppercase tracking-wider text-text-secondary">
           What is this tag on?

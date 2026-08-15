@@ -5,6 +5,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { generateTagBatch } from '@/lib/tags/generate'
 
 export async function GET(request: NextRequest) {
   if (process.env.NODE_ENV === 'production') {
@@ -55,7 +56,14 @@ function buildAdminClient(supabaseUrl: string, serviceRoleKey: string) {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } })
 }
 
-/** Returns the unbound tag the seed leaves behind for the claim flow. */
+/**
+ * Returns an unbound tag, minting one if the pool is empty.
+ *
+ * The claim spec consumes a tag every time it runs, so a fixed seed would make
+ * the suite pass once and fail on every rerun. Minting on demand keeps it
+ * idempotent — which is what lets it run repeatedly against a stack that is not
+ * reset between runs.
+ */
 async function findUnclaimedTag(adminClient: AdminClient) {
   const { data } = await adminClient
     .from('tags')
@@ -64,7 +72,12 @@ async function findUnclaimedTag(adminClient: AdminClient) {
     .limit(1)
     .maybeSingle()
 
-  return data
-    ? NextResponse.json({ tagId: (data as { id: string }).id })
-    : NextResponse.json({ error: 'No unclaimed tag seeded' }, { status: 404 })
+  if (data) return NextResponse.json({ tagId: (data as { id: string }).id })
+
+  const [freshTag] = generateTagBatch(1)
+  const { error } = await adminClient.from('tags').insert({ id: freshTag! })
+
+  return error
+    ? NextResponse.json({ error: error.message }, { status: 500 })
+    : NextResponse.json({ tagId: freshTag })
 }

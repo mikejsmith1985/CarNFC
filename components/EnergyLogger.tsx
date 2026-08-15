@@ -13,6 +13,7 @@ import { createRevisionId } from '@/lib/offline/uuid'
 import { FUEL_GRADES, CHARGE_LOCATIONS } from '@/lib/validation/energy-log'
 import { COST_PER_MILE_DECIMALS, UNIT_DISTANCE } from '@/lib/constants'
 import type { EnergyMode, PowerSource } from '@/types/servicecard'
+import { hydrationMarker, useIsHydrated } from '@/components/ui/useIsHydrated'
 
 interface EnergyLoggerProps {
   vehicleId: string
@@ -50,11 +51,12 @@ export function EnergyLogger({
   previousOdometer = null,
   previousWasFullFill = true,
 }: EnergyLoggerProps) {
+  const isReady = useIsHydrated()
   const availableModes = resolveAvailableModes(powerSource)
   const [mode, setMode] = useState<EnergyMode>(modeHint ?? availableModes[0] ?? 'fuel')
 
   return (
-    <div className="px-4 py-5">
+    <div className="px-4 py-5" {...hydrationMarker(isReady)}>
       {availableModes.length > 1 ? <ModeTabs value={mode} onChange={setMode} /> : null}
 
       {mode === 'fuel' ? (
@@ -146,30 +148,34 @@ function FuelForm({
   const [volume, setVolume] = useState('')
   const [pricePerGallon, setPricePerGallon] = useState('')
   const [totalCost, setTotalCost] = useState('')
+  // Once the owner types a total themselves, it stops being derived.
+  const [isTotalEdited, setIsTotalEdited] = useState(false)
   const [grade, setGrade] = useState<string>('87')
   const [isFullFill, setIsFullFill] = useState(true)
   const [missedFillBefore, setMissedFillBefore] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [savedMessage, setSavedMessage] = useState<string | null>(null)
   const [isSaving, startSaving] = useTransition()
 
   const odometerCheck = checkOdometer(Number(odometer || 0), currentOdometer)
 
   /**
-   * Fills in whichever of volume, unit price, and total cost was left blank.
-   * Someone at a pump reads two numbers off the display; the third should not
-   * need doing in their head (FR-031).
+   * The total, derived live from volume and unit price.
+   *
+   * Derived as the owner types rather than when they leave a field: someone at
+   * a pump reads two numbers off the display and should see the third appear,
+   * not have to tab away to discover it. Typing a total directly takes over,
+   * because a receipt total is authoritative over anything computed (FR-031).
    */
-  const applyDerivation = () => {
+  const derivedTotal = useMemo(() => {
+    if (isTotalEdited) return totalCost
     const derived = deriveFuelCostFields({
       volumeGallons: toNumberOrNull(volume),
       pricePerGallon: toNumberOrNull(pricePerGallon),
-      totalCost: toNumberOrNull(totalCost),
+      totalCost: null,
     })
-    if (derived.volumeGallons !== null && volume === '') setVolume(String(derived.volumeGallons))
-    if (derived.pricePerGallon !== null && pricePerGallon === '')
-      setPricePerGallon(String(derived.pricePerGallon))
-    if (derived.totalCost !== null && totalCost === '') setTotalCost(String(derived.totalCost))
-  }
+    return derived.totalCost === null ? '' : String(derived.totalCost)
+  }, [volume, pricePerGallon, totalCost, isTotalEdited])
 
   const economy = useMemo(() => {
     const volumeValue = toNumberOrNull(volume)
@@ -179,7 +185,7 @@ function FuelForm({
           odometer: Number(odometer || 0),
           volumeGallons: volumeValue ?? 0,
           pricePerGallon: toNumberOrNull(pricePerGallon),
-          totalCost: toNumberOrNull(totalCost),
+          totalCost: toNumberOrNull(derivedTotal),
           isFullFill,
           missedFillBefore,
         },
@@ -192,7 +198,7 @@ function FuelForm({
         odometer: Number(odometer || 0),
         volumeGallons: volumeValue,
         pricePerGallon: toNumberOrNull(pricePerGallon),
-        totalCost: toNumberOrNull(totalCost),
+        totalCost: toNumberOrNull(derivedTotal),
         isFullFill,
         missedFillBefore,
       },
@@ -209,7 +215,7 @@ function FuelForm({
     odometer,
     volume,
     pricePerGallon,
-    totalCost,
+    derivedTotal,
     isFullFill,
     missedFillBefore,
     previousOdometer,
@@ -230,13 +236,25 @@ function FuelForm({
           odometer: Number(odometer || 0),
           volumeGallons: toNumberOrNull(volume),
           pricePerGallon: toNumberOrNull(pricePerGallon),
-          totalCost: toNumberOrNull(totalCost),
+          totalCost: toNumberOrNull(derivedTotal),
           fuelGrade: grade,
           isFullFill,
           missedFillBefore,
         },
       })
-      if (result.error) setFormError(result.error)
+
+      if (result.error) {
+        setFormError(result.error)
+        return
+      }
+
+      // Standing at a pump, someone needs to see that the entry landed before
+      // they walk away — there is no timeline on this screen to show it.
+      setSavedMessage(result.queued ? 'Saved on this device' : 'Fill-up saved')
+      setVolume('')
+      setPricePerGallon('')
+      setTotalCost('')
+      setIsTotalEdited(false)
     })
   }
 
@@ -258,7 +276,6 @@ function FuelForm({
         unit="gal"
         value={volume}
         onChange={(event) => setVolume(event.target.value)}
-        onBlur={applyDerivation}
       />
 
       <div className="grid grid-cols-2 gap-3">
@@ -269,16 +286,17 @@ function FuelForm({
           unit="USD"
           value={pricePerGallon}
           onChange={(event) => setPricePerGallon(event.target.value)}
-          onBlur={applyDerivation}
         />
         <TextField
           label="Total cost"
           type="number"
           step="0.01"
           unit="USD"
-          value={totalCost}
-          onChange={(event) => setTotalCost(event.target.value)}
-          onBlur={applyDerivation}
+          value={derivedTotal}
+          onChange={(event) => {
+            setIsTotalEdited(true)
+            setTotalCost(event.target.value)
+          }}
         />
       </div>
 
@@ -326,6 +344,7 @@ function FuelForm({
       />
 
       {formError ? <ErrorNote message={formError} /> : null}
+      {savedMessage ? <SavedNote message={savedMessage} /> : null}
 
       <Button variant="primary" size="large" fullWidth onClick={handleSubmit} disabled={isSaving}>
         {isSaving ? 'Saving…' : 'Save fill-up'}
@@ -535,6 +554,17 @@ function ResultPanel({
         <p className="mt-2 border-t border-border pt-2 text-xs text-text-muted">{note}</p>
       ) : null}
     </section>
+  )
+}
+
+function SavedNote({ message }: { message: string }) {
+  return (
+    <p
+      role="status"
+      className="rounded-card border border-success/50 bg-success/10 px-3 py-2 text-sm text-success"
+    >
+      {message}
+    </p>
   )
 }
 

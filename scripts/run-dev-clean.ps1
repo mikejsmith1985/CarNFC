@@ -57,6 +57,20 @@ if (-not $SkipDatabaseReset) {
     finally {
         Pop-Location
     }
+
+    # UX specs assert against the worked example from the specification — the
+    # Raptor at 112,450 miles with its bound tags. Resetting without reseeding
+    # leaves them asserting against an empty database, and leaving stale data in
+    # place lets one run's entries change the next run's arithmetic.
+    Write-Host "Seeding demo fixtures" -ForegroundColor Yellow
+    Push-Location $repositoryRoot
+    try {
+        & npx tsx --env-file=.env.local scripts/seed-demo.ts
+        if ($LASTEXITCODE -ne 0) { throw "Demo seed failed with exit code $LASTEXITCODE." }
+    }
+    finally {
+        Pop-Location
+    }
 }
 
 # --- Start the dev server ------------------------------------------------------

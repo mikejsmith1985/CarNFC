@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { LogModal } from '@/components/LogModal'
 import { SpecEditor, SpecEditorTrigger } from '@/components/SpecEditor'
 import type { ComponentCard, LogCategory } from '@/types/servicecard'
+import { hydrationMarker, useIsHydrated } from '@/components/ui/useIsHydrated'
 
 interface QuickActionsProps {
   componentId: string
@@ -30,12 +31,13 @@ export function QuickActions({
   currentOdometer,
   specs,
 }: QuickActionsProps) {
+  const isReady = useIsHydrated()
   const [openCategory, setOpenCategory] = useState<LogCategory | null>(null)
   const [isEditingSpecs, setIsEditingSpecs] = useState(false)
 
   return (
     <>
-      <section className="px-4 py-2" aria-label="Quick log actions">
+      <section className="px-4 py-2" aria-label="Quick log actions" {...hydrationMarker(isReady)}>
         <div className="grid grid-cols-3 gap-2">
           <Button
             variant="primary"

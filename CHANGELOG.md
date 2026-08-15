@@ -109,6 +109,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   have rewritten or erased a recorded revision — the exact thing the append-only model
   exists to prevent. `UPDATE` and `DELETE` are now revoked on both revision tables, so
   immutability holds twice over: no policy, and no privilege.
+- **The claim flow could never complete.** The Row Level Security policy on `tags` was
+  `claimed_by = auth.uid()`, but an unclaimed tag has `claimed_by` NULL — so it matched
+  nobody, including the owner standing at the vehicle trying to claim it. `claim_tag` is
+  `SECURITY INVOKER`, so its own lookup was filtered out too and it raised `tag_not_found`
+  every time. Unclaimed tags are now readable by any signed-in owner, which discloses
+  nothing: the row carries its own id and four nulls, and the id is already in the hand of
+  whoever scanned it. Found by the Cypress claim journey.
+- **`v_current_energy_revisions` could not be filtered by vehicle.** It exposed `entry_id`
+  but not `vehicle_id`, so the card reached for the vehicle through a PostgREST embed on a
+  view — and views carry no declared relationships, so the embed silently returned nothing.
+  The previous odometer was always null and economy stayed permanently blank.
 - **The energy logger could never compute economy.** The component card rendered it without
   the previous odometer reading, so every interval resolved to "first entry" and MPG,
   mi/kWh and cost-per-mile were permanently blank — the whole purpose of a fuel-door tag.
@@ -122,6 +133,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `checkOdometer` no longer formats its own message. Locale formatting moved to
   `describeOdometerWarning`, keeping a function that runs on every keystroke free of ICU
   initialization.
+- Saving a fill-up gave no visible confirmation at all — the form simply sat there. It now
+  confirms and clears, so someone at a pump can see the entry landed before walking away.
+- Fuel cost now derives as the owner types rather than when they leave a field: someone
+  reading two numbers off a pump display should see the third appear, not have to tab away
+  to discover it.
 - UUIDv7 ids generated within the same millisecond did not sort. The outbox drains in
   bursts, so the monotonic counter RFC 9562 reserves is now used.
 

@@ -129,10 +129,13 @@ async function loadPreviousEnergyEntry(
 ): Promise<{ odometer: number | null; wasFullFill: boolean }> {
   const supabase = await createServerSupabaseClient()
 
+  // Filtered on the view's own vehicle_id. An embed would need a declared
+  // relationship, which a view does not carry — that silently returned nothing
+  // and left economy permanently blank.
   const { data } = await supabase
     .from('v_current_energy_revisions')
-    .select('odometer, is_full_fill, entry_id, energy_entries!inner(vehicle_id)')
-    .eq('energy_entries.vehicle_id', vehicleId)
+    .select('odometer, is_full_fill')
+    .eq('vehicle_id', vehicleId)
     .order('odometer', { ascending: false })
     .limit(1)
     .maybeSingle()

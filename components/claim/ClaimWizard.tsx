@@ -1,9 +1,10 @@
 // Two-step claim wizard: which vehicle, then which part.
 'use client'
 
-import { useState, useSyncExternalStore } from 'react'
+import { useState } from 'react'
 import { VehicleStep, type VehicleOption } from '@/components/claim/VehicleStep'
 import { ComponentStep, type TemplateOption } from '@/components/claim/ComponentStep'
+import { hydrationMarker, useIsHydrated } from '@/components/ui/useIsHydrated'
 
 interface ClaimWizardProps {
   tagId: string
@@ -21,21 +22,10 @@ interface ClaimWizardProps {
 export function ClaimWizard({ tagId, vehicles, templates }: ClaimWizardProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleOption | null>(null)
 
-  // Marks the wizard interactive once React has hydrated. A real browser click
-  // on a server-rendered button does nothing until then, which makes UX tests
-  // flaky in a way that looks like a product bug and is not.
-  //
-  // useSyncExternalStore rather than an effect: it returns false during server
-  // render and true on the client with no state update, so there is no
-  // cascading re-render.
-  const isReady = useSyncExternalStore(
-    subscribeToNothing,
-    () => true,
-    () => false,
-  )
+  const isReady = useIsHydrated()
 
   return (
-    <div className="space-y-6" data-ready={isReady ? 'true' : 'false'}>
+    <div className="space-y-6" {...hydrationMarker(isReady)}>
       <ol className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide">
         <StepPill index={1} label="Vehicle" isActive={selectedVehicle === null} />
         <span aria-hidden className="h-px flex-1 bg-border" />
@@ -54,11 +44,6 @@ export function ClaimWizard({ tagId, vehicles, templates }: ClaimWizardProps) {
       )}
     </div>
   )
-}
-
-/** No-op subscription: the value never changes after hydration. */
-function subscribeToNothing(): () => void {
-  return () => {}
 }
 
 function StepPill({ index, label, isActive }: { index: number; label: string; isActive: boolean }) {

@@ -24,6 +24,7 @@ describe('claim a tag (US3)', () => {
       cy.contains('button', DEMO.vehicleLabel).realClick()
 
       cy.contains('What is this tag on?').should('be.visible')
+      cy.get('[data-ready="true"]')
       cy.contains('button', 'Transfer Case').realClick()
       cy.contains('button', 'Claim this tag').realClick()
 
@@ -95,8 +96,8 @@ describe('energy logging (US4)', () => {
   it('derives total cost from gallons and unit price (FR-031)', () => {
     cy.visit(cardPath(DEMO.components.fuelDoor))
 
-    cy.contains('label', 'Gallons pumped').find('input').type('20').blur()
-    cy.contains('label', 'Price / gal').find('input').type('3.5').blur()
+    cy.contains('label', 'Gallons pumped').find('input').type('20')
+    cy.contains('label', 'Price / gal').find('input').type('3.5').should('have.value', '3.5').blur()
 
     cy.contains('label', 'Total cost').find('input').should('have.value', '70')
   })
@@ -106,8 +107,9 @@ describe('energy logging (US4)', () => {
 
     // First fill establishes the baseline.
     cy.contains('label', 'Odometer').find('input').clear().type(String(DEMO.odometer))
-    cy.contains('label', 'Gallons pumped').find('input').type('18').blur()
+    cy.contains('label', 'Gallons pumped').find('input').type('18')
     cy.contains('button', 'Save fill-up').realClick()
+    cy.contains('Fill-up saved', { timeout: 15_000 }).should('be.visible')
 
     // Second fill, 300 miles later on 20 gallons.
     cy.visit(cardPath(DEMO.components.fuelDoor))
@@ -115,7 +117,7 @@ describe('energy logging (US4)', () => {
       .find('input')
       .clear()
       .type(String(DEMO.odometer + 300))
-    cy.contains('label', 'Gallons pumped').find('input').type('20').blur()
+    cy.contains('label', 'Gallons pumped').find('input').type('20')
 
     cy.contains('15 mpg').should('be.visible')
   })
@@ -123,7 +125,7 @@ describe('energy logging (US4)', () => {
   it('explains why a partial fill produces no economy figure (FR-033)', () => {
     cy.visit(cardPath(DEMO.components.fuelDoor))
 
-    cy.contains('label', 'Gallons pumped').find('input').type('10').blur()
+    cy.contains('label', 'Gallons pumped').find('input').type('10')
     cy.contains('button', 'Filled the tank').realClick()
 
     cy.contains('Partial fill').should('be.visible')
