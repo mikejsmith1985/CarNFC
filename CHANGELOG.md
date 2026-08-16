@@ -83,6 +83,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   responsive layout.
 
 ### Changed
+- **Cloudflare Workers deployment** via OpenNext, matching how rootlevellabs.tech is already
+  served. `wrangler.jsonc` carries only public values; the service-role key is set with
+  `wrangler secret put` so it never reaches the repository or a build log.
+- **Reverted `proxy.ts` back to `middleware.ts`.** Next 16's own upgrade guide states the edge
+  runtime is not supported in `proxy` — it is always `nodejs` and cannot be configured — and
+  OpenNext cannot run Node.js middleware on Workers. `middleware` is the documented route to
+  the edge runtime, so the deployment target decides this rather than preference.
 - Pre-commit test gate now enforces Article V's three-layer separation rather than a
   co-located filename convention. `.forge/test-coverage-policy.json` declares which layer
   covers which paths; coverage stays mandatory and the gate still blocks an untested file
