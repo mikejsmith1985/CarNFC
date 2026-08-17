@@ -2,7 +2,7 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
-import { Droplet, Wrench, RefreshCw, Zap, Plus, Trash2 } from 'lucide-react'
+import { Droplet, Wrench, RefreshCw, Zap, Plus, Trash2, Mic } from 'lucide-react'
 import { Sheet } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
 import { TextField, TextAreaField, SelectField, ToggleField } from '@/components/ui/Field'
@@ -10,6 +10,7 @@ import { checkOdometer, describeOdometerWarning } from '@/lib/calc/odometer'
 import { submitOrQueue } from '@/lib/offline/sync'
 import { createRevisionId } from '@/lib/offline/uuid'
 import { AttachmentPicker, type PendingAttachment } from '@/components/AttachmentPicker'
+import { HandsFreeLogger } from '@/components/voice/HandsFreeLogger'
 import { ISO_DATE_LENGTH } from '@/lib/constants'
 import type { ServiceLogDraft } from '@/lib/validation/service-log'
 import type { ComponentSpec, LogCategory, SpecKind } from '@/types/servicecard'
@@ -108,6 +109,7 @@ export function LogModal({
   const [overrides, setOverrides] = useState<DraftOverride[]>([])
   const [attachments, setAttachments] = useState<PendingAttachment[]>([])
   const [odometerConfirmed, setOdometerConfirmed] = useState(false)
+  const [isHandsFree, setIsHandsFree] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [isSaving, startSaving] = useTransition()
 
@@ -118,6 +120,18 @@ export function LogModal({
     setDraft((previous) => ({ ...previous, [field]: value }))
   }
 
+  /**
+   * Writes a spoken answer into the draft.
+   *
+   * Goes through the same path as typing, including clearing the confirmation
+   * on an unusual odometer — otherwise a reading confirmed by hand could carry
+   * over to a completely different one given by voice.
+   */
+  const recordSpokenAnswer = (field: keyof ServiceLogDraft, value: string) => {
+    setField(field, value)
+    if (field === 'odometer') setOdometerConfirmed(false)
+  }
+
   const odometerCheck = useMemo(
     () => checkOdometer(Number(draft.odometer || 0), currentOdometer),
     [draft.odometer, currentOdometer],
@@ -126,6 +140,9 @@ export function LogModal({
   const handleCategoryChange = (next: LogCategory) => {
     setCategory(next)
     setFormError(null)
+    // A different category asks different questions, so a run in progress is
+    // now asking about fields that no longer exist.
+    setIsHandsFree(false)
     // Shared fields survive the switch; nothing else does.
     setDraft((previous) => ({
       ...emptyDraft(currentOdometer),
@@ -191,6 +208,28 @@ export function LogModal({
       <CategoryTabs value={activeCategory} onChange={handleCategoryChange} />
 
       <div className="mt-4 space-y-4">
+        {/*
+          Offered before any field, because the reason to want it — both hands
+          busy and dirty — is known before the first answer, not after typing
+          half the form.
+        */}
+        {isHandsFree ? (
+          <HandsFreeLogger
+            category={activeCategory}
+            onAnswer={recordSpokenAnswer}
+            onFinish={() => setIsHandsFree(false)}
+          />
+        ) : (
+          <Button
+            variant="secondary"
+            fullWidth
+            icon={<Mic size={18} aria-hidden />}
+            onClick={() => setIsHandsFree(true)}
+          >
+            Hands-free — ask me the questions
+          </Button>
+        )}
+
         {/* Shared by every category */}
         <TextField
           label="Date"

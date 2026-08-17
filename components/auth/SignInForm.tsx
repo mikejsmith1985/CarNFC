@@ -5,6 +5,7 @@ import { useEffect, useState, useSyncExternalStore, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Mail, KeyRound, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { useHasHydrated } from '@/components/ui/useHasHydrated'
 import { TextField } from '@/components/ui/Field'
 import { requestSignInCode, verifySignInCode } from '@/app/actions/auth'
 import { SIGN_IN_CODE_LENGTH } from '@/lib/validation/auth'
@@ -60,20 +61,9 @@ export function SignInForm({ nextPath }: SignInFormProps) {
   // read; the re-render it triggers is the point.
   const [, setSecondsTick] = useState(0)
 
-  // Gates the stored record behind hydration finishing. The server cannot see
-  // this device's storage, so it always sends the email step; showing the code
-  // step on the very first client render instead makes React find markup it did
-  // not expect, and it throws the whole form away and rebuilds it.
-  //
-  // A timer rather than `requestAnimationFrame`: a browser paints no frames for
-  // a hidden tab, and a tab restored behind the mail app is exactly the case
-  // this whole feature exists to serve. The form would have sat on the email
-  // step until the tab was looked at.
-  const [hasHydrated, setHasHydrated] = useState(false)
-  useEffect(() => {
-    const timer = setTimeout(() => setHasHydrated(true), 0)
-    return () => clearTimeout(timer)
-  }, [])
+  // The server cannot see this device's storage, so it always sends the email
+  // step. Waiting for hydration keeps the first client render identical to that.
+  const hasHydrated = useHasHydrated()
 
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')

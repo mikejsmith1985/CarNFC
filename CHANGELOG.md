@@ -71,6 +71,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `imageOrientation: 'from-image'` and `OffscreenCanvas` in a worker. The framework-first
   gate passed, so no third-party library was added.
 
+- **Hands-free logging.** A log can now be filled in by talking to it: the app reads each
+  question out loud and writes down the answer, so a job can be recorded without picking the
+  phone up. The questions are the ones worth asking aloud — what fluid went in, how much,
+  what torque, what part number came off — and anything needing a screen to answer sensibly,
+  like a spec override or a photo, is left to the form.
+  - **No AI, no network, no cost.** The browser's own Web Speech API turns speech into words;
+    a lookup table and an accumulator turn those words into a field value. It behaves the
+    same way every time and there is nothing to bill or to rate-limit.
+  - Oil grades survive however they are said. Dictation splits them every way imaginable —
+    "75 W 90", "seventy five W ninety", "10w40", "5 weight 30" — and all of them are written
+    as `75W-90`. Something that is not a grade at all, like "synthetic gear oil", is left
+    exactly as spoken rather than forced into one.
+  - Numbers are read the way people say them, so "one hundred twenty three thousand four
+    hundred" reaches an odometer field as `123400`, and a unit said aloud out of habit —
+    "five quarts" — does not end up inside the number.
+  - "Skip", "repeat", "back" and "done" steer the run, but only as a whole utterance:
+    "replace it at the next service" is an answer, not a command to skip.
+  - Every question can equally be answered by pressing a button or typing, always visible
+    rather than a fallback to be discovered. Dictation fails for ordinary reasons — a loud
+    workshop, a refused permission, or a browser that sends audio to a server and has no
+    signal to do it with — and each of those says so plainly.
+  - Started by a press, never on its own: iOS will not speak or open a microphone unless a
+    person asked for it in that moment, so a panel that began talking by itself would be
+    silent on exactly the phone most likely to be propped on a wing.
 - **Integration suite against real PostgreSQL** via testcontainers, applying the real
   migrations and exercising the real policies — no mocked drivers. Covers owner isolation,
   append-only privileges, the grant surface, every CHECK constraint, override precedence
