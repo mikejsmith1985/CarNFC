@@ -9,6 +9,12 @@ param(
     # Generates the service worker in development. Off by default so a stale
     # worker never hides a code change; required for the offline UX specs,
     # which have nothing to serve the page from without it.
+    # Serves a production build instead of the dev server. The offline specs
+    # need it: a service worker only exists in a production build, and dev
+    # chunk hashes change on every recompile, so a restored session re-requests
+    # assets that no longer exist and the page never hydrates.
+    [switch]$Production,
+
     [switch]$WithServiceWorker,
 
     [int]$Port = 3100,
@@ -83,6 +89,20 @@ Write-Host "Starting Next.js dev server on port $Port" -ForegroundColor Green
 Push-Location $repositoryRoot
 try {
     $env:PORT = "$Port"
+    if ($Production) {
+        Write-Host 'Building for production...' -ForegroundColor Yellow
+        & npx next build --webpack
+        if ($LASTEXITCODE -ne 0) { throw 'Production build failed.' }
+
+        # The test-only sign-in route is gated on this AND on the database being
+        # local, so a real deployment cannot open it by setting one variable.
+        $env:SERVICECARD_ENABLE_TEST_AUTH = '1'
+
+        Write-Host "Serving the production build on port $Port" -ForegroundColor Green
+        & npx next start --port $Port
+        return
+    }
+
     if ($WithServiceWorker) {
         Write-Host 'Service worker enabled for this run' -ForegroundColor Yellow
         $env:SERVICECARD_ENABLE_SW = '1'

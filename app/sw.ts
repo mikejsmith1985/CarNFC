@@ -2,7 +2,7 @@
 
 import { defaultCache } from '@serwist/next/worker'
 import type { PrecacheEntry, SerwistGlobalConfig } from 'serwist'
-import { Serwist, StaleWhileRevalidate, NetworkOnly } from 'serwist'
+import { Serwist, StaleWhileRevalidate, NetworkFirst, NetworkOnly } from 'serwist'
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -32,14 +32,31 @@ const serwist = new Serwist({
     },
     {
       /*
-        Component cards: serve the cached copy immediately, revalidate behind it.
+        The card's HTML, kept for when there is no signal — but never served
+        ahead of the network while there is one.
 
-        This is what makes a repeat tap paint inside the one-second budget even
-        with no signal (SC-002). The staleness stamp shown in the UI comes from
-        IndexedDB, not from here — the cache only makes the paint fast.
+        A page document from this app names the exact build chunks it needs.
+        Handing back a stale one against a newer bundle produces a card that
+        paints and then does nothing at all: React finds markup belonging to a
+        different build and never finishes wiring it up. Every button is dead,
+        and it looks like a broken feature rather than a stale cache. Serving
+        it only when the network has actually failed keeps a tap working with no
+        signal (FR-038) without ever risking that on a tap that had one.
       */
-      matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/v/'),
-      handler: new StaleWhileRevalidate({ cacheName: 'component-cards' }),
+      matcher: ({ url, sameOrigin, request }) =>
+        sameOrigin && url.pathname.startsWith('/v/') && request.destination === 'document',
+      handler: new NetworkFirst({ cacheName: 'component-cards' }),
+    },
+    {
+      /*
+        Everything else the card asks for — its data payloads — is safe to serve
+        from cache first, because none of it carries a reference to a build.
+        This is what makes a repeat tap paint inside the budget (SC-002). The
+        staleness stamp comes from IndexedDB, not from here.
+      */
+      matcher: ({ url, sameOrigin, request }) =>
+        sameOrigin && url.pathname.startsWith('/v/') && request.destination !== 'document',
+      handler: new StaleWhileRevalidate({ cacheName: 'component-card-data' }),
     },
     ...defaultCache,
   ],

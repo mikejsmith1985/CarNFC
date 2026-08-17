@@ -6,10 +6,17 @@
 
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { isTestAuthAllowed } from '@/lib/test-support/test-auth-gate'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
-  if (process.env.NODE_ENV === 'production') {
+  if (
+    !isTestAuthAllowed({
+      nodeEnv: process.env.NODE_ENV,
+      enableTestAuth: process.env.SERVICECARD_ENABLE_TEST_AUTH,
+      requestHost: request.headers.get('host'),
+    })
+  ) {
     return NextResponse.json({ error: 'Not available' }, { status: 404 })
   }
 

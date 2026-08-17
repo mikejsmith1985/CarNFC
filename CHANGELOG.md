@@ -140,6 +140,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The service worker could serve a card that paints and then does nothing.** Component
+  card pages were cached with `stale-while-revalidate`, which returns the previous copy while
+  it fetches a new one — including the page's HTML. A document from this app names the exact
+  build chunks it needs, so a stale one handed back against a newer bundle leaves React with
+  markup from a different build: the card paints, and every button on it is dead. With
+  `skipWaiting` and `clientsClaim` the worker takes over mid-load, so this could happen on a
+  first visit after a deploy, and it looks exactly like a broken feature rather than a stale
+  cache. Card documents now come from the network whenever there is one and from the cache
+  only when there is not, which keeps a tap working with no signal without ever risking that
+  on a tap that had one. Data payloads, which name no build, are still served cache-first.
+- The test-only sign-in and tag routes are gated on the request having arrived on this
+  machine, not merely on the build being a development one. That lets the UX suite run
+  against a local production build — the only build that has a service worker, and therefore
+  the only one where the offline behaviour is the real thing — while a request from anywhere
+  else, tunnel included, still gets a 404 whatever the environment says.
 - **Two of the card's three quick actions opened the wrong form.** `LogModal` held the
   category in its own state, set the first time it mounted and never revisited, so Repair
   and Upgrade both opened Maintenance. The three buttons are the card's entire purpose. The
