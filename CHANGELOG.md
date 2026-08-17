@@ -98,6 +98,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The app was unusable through a tunnel, silently.** The dev server refuses cross-origin
+  requests for its own client chunks, so a tunnelled page rendered on the server but never
+  hydrated — every button looked correct and did nothing. `allowedDevOrigins` fixes it, and
+  `serverActions.allowedOrigins` covers the CSRF check that a tunnel breaks by design.
+- **The sign-in email carried no code.** Supabase's default magic-link template omits
+  `{{ .Token }}`, so the form asked for six digits that were never sent.
+  `supabase/templates/magic-link.html` supplies both the code and the link. This applies to
+  hosted Supabase as well, not only the local stack.
+
 - **No table privileges existed at all — the application was dead on arrival.** Row Level
   Security decides which *rows* a role may touch; it does not grant permission to touch the
   table, and PostgreSQL refuses the statement before any policy is consulted. The schema
