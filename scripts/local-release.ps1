@@ -79,12 +79,27 @@ try {
     # --- tag and publish -----------------------------------------------------
     Write-Host "`nTagging $Version..." -ForegroundColor Yellow
     & git tag -a $Version -m "ServiceCard $Version"
+    if ($LASTEXITCODE -ne 0) { throw 'git tag failed.' }
+
+    # The tag has to reach the remote before the release is created. GitHub
+    # refuses to publish a release for a tag it cannot see, and asking it to
+    # create the tag instead means guessing a target commit — which is how this
+    # step failed the first time it was used for real.
+    Write-Host "Pushing the tag..." -ForegroundColor Yellow
+    & git push origin $Version
+    if ($LASTEXITCODE -ne 0) {
+        & git tag -d $Version
+        throw 'Pushing the tag failed. Local tag removed.'
+    }
 
     Write-Host "Publishing with gh..." -ForegroundColor Yellow
     & gh release create $Version --title "ServiceCard $Version" --notes-file $changelogPath
     if ($LASTEXITCODE -ne 0) {
+        # Leave nothing half-done: a tag with no release reads as a shipped
+        # version that cannot be downloaded.
+        & git push origin --delete $Version
         & git tag -d $Version
-        throw 'gh release create failed. Local tag removed.'
+        throw 'gh release create failed. Tag removed locally and on the remote.'
     }
 
     Write-Host "`nReleased $Version." -ForegroundColor Green
