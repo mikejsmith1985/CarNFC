@@ -16,8 +16,30 @@ const withSerwist = withSerwistInit({
   disable: process.env.NODE_ENV === 'development' || process.env.OPEN_NEXT_BUILD === '1',
 })
 
+/**
+ * Hosts allowed to load dev-server resources.
+ *
+ * Testing on a real phone means reaching this machine through a tunnel, and the
+ * tunnel's hostname is not the one the dev server is bound to. Next blocks that
+ * by default, which silently withholds the client bundle — the page renders but
+ * never becomes interactive, and every button looks broken. Ignored entirely by
+ * a production build; it exists only so `next dev` can be reached from a device.
+ */
+const TUNNEL_DEV_HOSTS = ['*.trycloudflare.com']
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+
+  allowedDevOrigins: TUNNEL_DEV_HOSTS,
+
+  experimental: {
+    serverActions: {
+      // Server Actions are rejected when the request's origin does not match the
+      // host, which is exactly what a tunnel does. Sign-in is a Server Action,
+      // so without this the phone can load the form but never send a code.
+      allowedOrigins: [...TUNNEL_DEV_HOSTS, 'localhost:3100', '127.0.0.1:3100'],
+    },
+  },
 
   // The shared passport is the only unauthenticated data path in the product.
   // These headers stop a pasted link from expanding into a chat preview that

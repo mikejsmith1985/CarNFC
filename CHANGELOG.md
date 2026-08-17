@@ -109,6 +109,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a code sent in another tab moves this one. The remaining validity is shown as a live
   countdown matching `otp_expiry`, and a lapsed code clears itself with an explanation
   rather than silently failing on submit.
+- **A phone could not reach the dev server through a tunnel at all.** Next blocks dev
+  resources requested from a host it is not bound to, so the page rendered but the client
+  bundle was withheld — it never became interactive, and every button looked broken while
+  the code behind it was fine. Server Actions were rejected for the same origin-versus-host
+  reason, which is the entire sign-in path. Both allowances are now declared, and both are
+  inert in a production build.
 - The resumed step is gated behind hydration completing. The server cannot see the device's
   storage, so it always renders the email step; showing the code step on the first client
   render instead made React find markup it did not expect and throw the entire form away and

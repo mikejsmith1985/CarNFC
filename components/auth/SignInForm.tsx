@@ -63,12 +63,16 @@ export function SignInForm({ nextPath }: SignInFormProps) {
   // Gates the stored record behind hydration finishing. The server cannot see
   // this device's storage, so it always sends the email step; showing the code
   // step on the very first client render instead makes React find markup it did
-  // not expect, and it throws the whole form away and rebuilds it. Waiting for
-  // the next frame costs one frame and keeps the two renders identical.
+  // not expect, and it throws the whole form away and rebuilds it.
+  //
+  // A timer rather than `requestAnimationFrame`: a browser paints no frames for
+  // a hidden tab, and a tab restored behind the mail app is exactly the case
+  // this whole feature exists to serve. The form would have sat on the email
+  // step until the tab was looked at.
   const [hasHydrated, setHasHydrated] = useState(false)
   useEffect(() => {
-    const frame = requestAnimationFrame(() => setHasHydrated(true))
-    return () => cancelAnimationFrame(frame)
+    const timer = setTimeout(() => setHasHydrated(true), 0)
+    return () => clearTimeout(timer)
   }, [])
 
   const [email, setEmail] = useState('')
