@@ -95,6 +95,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Started by a press, never on its own: iOS will not speak or open a microphone unless a
     person asked for it in that moment, so a panel that began talking by itself would be
     silent on exactly the phone most likely to be propped on a wing.
+- **Zone tags.** A tag can now cover a working area instead of a single part. One tag per
+  part is the sharpest thing this product does — tap the diff, get the diff — and it does not
+  scale to a whole vehicle, because nobody is putting twenty badges on a truck. A zone tag is
+  the other end of that trade: one badge where a person already stands, opening everything
+  they reach from there.
+  - Three fixed zones: **Under-hood** (radiator shroud or fuse box lid), **Fuel & charging**
+    (inside the filler or charge flap), and **Underbody** (frame rail or door jamb). Fixed
+    rather than owner-defined, because a zone has to mean the same thing on every vehicle for
+    a badge to be worth printing.
+  - Tapping one opens what is due soonest, then a one-press log sheet for every part in that
+    zone, then a way through to the rest of the vehicle. Due dates are projected with the same
+    calculation the card uses, so the two can never disagree.
+  - Parts are matched by the template they were created from, never by name — an owner can
+    rename a component to anything, and the badge on the bonnet cannot be reprinted.
+  - A tag binds to a part **or** a zone, never both and never neither, enforced by a database
+    constraint rather than by the application remembering.
+- **The component card was a dead end.** Arriving by tag leaves no history to go back through,
+  and the vehicle name in the header was plain text, so there was no way to the vehicle or the
+  garage from the screen a tap lands on. It is now a link, at the full touch-target size.
 - **Garage management** (FR-048, FR-046). A vehicle could be born inside the claim flow and
   never touched again: the garage listed vehicles and offered nothing else.
   - **Add a vehicle** from the garage, before any tag exists. Someone setting up before their

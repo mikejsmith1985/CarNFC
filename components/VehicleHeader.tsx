@@ -1,5 +1,6 @@
 // Card header: which vehicle, which part, and the current odometer — the three things that orient someone who just tapped a tag.
-import { Car, Tag } from 'lucide-react'
+import Link from 'next/link'
+import { Car, Tag, ChevronLeft } from 'lucide-react'
 import type { ComponentCard } from '@/types/servicecard'
 import { UNIT_DISTANCE } from '@/lib/constants'
 
@@ -18,12 +19,21 @@ export function VehicleHeader({ vehicle, component }: VehicleHeaderProps) {
     <header className="border-b border-border bg-surface-raised px-4 py-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="flex items-center gap-2 text-base font-bold text-text-primary">
+          {/*
+            The way back out. Arriving here by tag means there is no history to
+            go back through, so without this the card is where the app ends —
+            no vehicle, no garage, no other part.
+          */}
+          <Link
+            href={`/v/${vehicle.slug}`}
+            className="-ml-1 flex min-h-touch items-center gap-1.5 text-base font-bold text-text-primary"
+          >
+            <ChevronLeft size={18} className="shrink-0 text-text-secondary" aria-hidden />
             <Car size={18} className="shrink-0 text-text-secondary" aria-hidden />
             <span className="truncate">{vehicle.nickname || vehicleName || 'Vehicle'}</span>
-          </p>
+          </Link>
           {vehicle.nickname && vehicleName ? (
-            <p className="mt-0.5 truncate pl-6 text-sm text-text-secondary">{vehicleName}</p>
+            <p className="mt-0.5 truncate pl-11 text-sm text-text-secondary">{vehicleName}</p>
           ) : null}
         </div>
 

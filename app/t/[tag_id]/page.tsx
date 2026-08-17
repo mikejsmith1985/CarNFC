@@ -35,6 +35,8 @@ export default async function TagResolverPage({
   switch (resolution.status) {
     case 'owned':
       redirect(`/v/${resolution.vehicleSlug}/c/${resolution.componentSlug}`)
+    case 'zone':
+      redirect(`/v/${resolution.vehicleSlug}/z/${resolution.zoneKey}`)
     case 'unclaimed':
       redirect(`/claim?tag_id=${encodeURIComponent(tagId)}`)
     case 'forbidden':
@@ -59,6 +61,13 @@ function normalizeResolution(payload: unknown): TagResolution {
       status: 'owned',
       vehicleSlug: String(record.vehicle_slug ?? ''),
       componentSlug: String(record.component_slug ?? ''),
+    }
+  }
+  if (status === 'zone') {
+    return {
+      status: 'zone',
+      vehicleSlug: String(record.vehicle_slug ?? ''),
+      zoneKey: String(record.zone_key ?? ''),
     }
   }
   if (status === 'unclaimed') return { status: 'unclaimed' }

@@ -3,10 +3,11 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Wrench, Fuel, BatteryCharging } from 'lucide-react'
+import { Wrench, Fuel, BatteryCharging, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
-import { claimTag } from '@/app/actions/claim'
+import { claimTag, claimZoneTag } from '@/app/actions/claim'
+import { listZones, type ZoneKey } from '@/lib/zones/zones'
 import { filterCompatibleTemplates, type ComponentTemplateSummary } from '@/lib/claim/compatibility'
 import type { VehicleOption } from '@/components/claim/VehicleStep'
 import { hydrationMarker, useIsHydrated } from '@/components/ui/useIsHydrated'
@@ -36,6 +37,9 @@ export function ComponentStep({ tagId, vehicle, templates, onBack }: ComponentSt
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [customName, setCustomName] = useState('')
   const [isCustom, setIsCustom] = useState(false)
+  // A badge covering a working area rather than a single part. Exclusive with
+  // a template choice, the same way the binding is exclusive in the database.
+  const [selectedZone, setSelectedZone] = useState<ZoneKey | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
   const [isSaving, startSaving] = useTransition()
 
@@ -52,6 +56,20 @@ export function ComponentStep({ tagId, vehicle, templates, onBack }: ComponentSt
 
   const handleClaim = () => {
     setFormError(null)
+
+    if (selectedZone) {
+      startSaving(async () => {
+        const zoneResult = await claimZoneTag(tagId, vehicle.id, selectedZone)
+        if (!zoneResult.ok) {
+          setFormError(zoneResult.error)
+          return
+        }
+        router.replace(`/v/${zoneResult.data.vehicleSlug}/z/${zoneResult.data.zoneKey}`)
+        router.refresh()
+      })
+      return
+    }
+
     startSaving(async () => {
       const result = await claimTag({
         tagId,
@@ -99,6 +117,7 @@ export function ComponentStep({ tagId, vehicle, templates, onBack }: ComponentSt
               onClick={() => {
                 setSelectedKey(template.key)
                 setIsCustom(false)
+                setSelectedZone(null)
                 setFormError(null)
               }}
               className={`flex min-h-touch items-center gap-2 rounded-card border px-3 py-2.5 text-left text-sm font-semibold ${
@@ -120,10 +139,52 @@ export function ComponentStep({ tagId, vehicle, templates, onBack }: ComponentSt
         onClick={() => {
           setIsCustom(true)
           setSelectedKey(null)
+          setSelectedZone(null)
         }}
       >
         Not listed — name it myself
       </Button>
+
+      {/*
+        The alternative to a tag per part. Nobody puts twenty badges on a truck,
+        so one badge can stand for a whole working area and open everything
+        reachable from it.
+      */}
+      <section className="rounded-card border border-border bg-surface-sunken p-3">
+        <h3 className="text-sm font-bold text-text-primary">Or cover a whole area</h3>
+        <p className="mt-1 text-xs text-text-muted">
+          One badge for everything you reach from where it is stuck.
+        </p>
+
+        <div className="mt-3 space-y-2">
+          {listZones().map((zone) => {
+            const isSelected = selectedZone === zone.key
+            return (
+              <button
+                key={zone.key}
+                type="button"
+                onClick={() => {
+                  setSelectedZone(zone.key)
+                  setSelectedKey(null)
+                  setIsCustom(false)
+                  setFormError(null)
+                }}
+                className={`flex min-h-touch w-full items-start gap-2 rounded-card border px-3 py-2.5 text-left ${
+                  isSelected
+                    ? 'border-accent bg-accent/10 text-text-primary'
+                    : 'border-border bg-surface-raised text-text-secondary'
+                }`}
+              >
+                <MapPin size={16} className="mt-0.5 shrink-0" aria-hidden />
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold">{zone.label}</span>
+                  <span className="block text-xs text-text-muted">{zone.placement}</span>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </section>
 
       {isCustom ? (
         <TextField
@@ -149,7 +210,7 @@ export function ComponentStep({ tagId, vehicle, templates, onBack }: ComponentSt
         size="large"
         fullWidth
         onClick={handleClaim}
-        disabled={isSaving || resolvedName.trim() === ''}
+        disabled={isSaving || (selectedZone === null && resolvedName.trim() === '')}
       >
         {isSaving ? 'Claiming…' : 'Claim this tag'}
       </Button>

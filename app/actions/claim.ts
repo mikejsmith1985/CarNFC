@@ -6,6 +6,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { vehicleSchema, type VehicleInput } from '@/lib/validation/vehicle'
 import { buildVehicleSlug, resolveSlugCollision, toSlug } from '@/lib/claim/slug'
 import { checkTemplateCompatibility } from '@/lib/claim/compatibility'
+import { isZoneKey } from '@/lib/zones/zones'
 import type { PowerSource } from '@/types/servicecard'
 
 export type { VehicleInput }
@@ -188,4 +189,50 @@ function translateClaimError(raw: string): string {
   if (raw.includes('vehicle_not_owned')) return 'That vehicle is not yours.'
   if (raw.includes('tag_not_found')) return 'That tag is not recognized.'
   return raw
+}
+
+/**
+ * Binds a tag to a working zone rather than to a single part.
+ *
+ * One badge where a person already stands, covering everything they reach from
+ * there. The binding is exclusive at the database level — a tag is on a part or
+ * on a zone, never both — so this cannot leave a tag pointing at two things
+ * (FR-045).
+ */
+export async function claimZoneTag(
+  tagId: string,
+  vehicleId: string,
+  zoneKey: string,
+): Promise<ActionResult<{ vehicleSlug: string; zoneKey: string }>> {
+  if (!isZoneKey(zoneKey)) return { ok: false, error: 'Choose where this badge goes.' }
+
+  const supabase = await createServerSupabaseClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { ok: false, error: 'Sign in to claim this tag.' }
+
+  const { data, error } = await supabase.rpc('claim_zone_tag', {
+    p_tag_id: tagId,
+    p_vehicle_id: vehicleId,
+    p_zone_key: zoneKey,
+  })
+
+  if (error) {
+    // The database speaks in exception names; an owner needs a sentence.
+    const message =
+      error.message.includes('tag_not_found') || error.message.includes('vehicle_not_found')
+        ? 'That tag could not be claimed.'
+        : error.message
+    return { ok: false, error: message }
+  }
+
+  revalidatePath('/garage')
+
+  const payload = (data ?? {}) as Record<string, unknown>
+  return {
+    ok: true,
+    data: { vehicleSlug: String(payload.vehicle_slug ?? ''), zoneKey },
+  }
 }

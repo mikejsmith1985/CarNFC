@@ -108,6 +108,7 @@ export interface ComponentTag {
 /** What `resolve_tag` returns. Never discloses vehicle data outside the `owned` branch. */
 export type TagResolution =
   | { status: 'owned'; vehicleSlug: string; componentSlug: string }
+  | { status: 'zone'; vehicleSlug: string; zoneKey: string }
   | { status: 'unclaimed' }
   | { status: 'forbidden' }
   | { status: 'unknown' }
@@ -305,7 +306,15 @@ export interface TimelineEntry {
 export interface ComponentCard {
   vehicle: Pick<
     Vehicle,
-    'id' | 'slug' | 'year' | 'make' | 'model' | 'trim' | 'nickname' | 'powerSource' | 'currentOdometer'
+    | 'id'
+    | 'slug'
+    | 'year'
+    | 'make'
+    | 'model'
+    | 'trim'
+    | 'nickname'
+    | 'powerSource'
+    | 'currentOdometer'
   >
   component: Pick<
     VehicleComponent,
