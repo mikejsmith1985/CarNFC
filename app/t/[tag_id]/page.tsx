@@ -19,26 +19,11 @@ export default async function TagResolverPage({
   const { tag_id: tagId } = await params
   const supabase = await createServerSupabaseClient()
 
-  // Nothing is resolved for a caller with no session, and that is two things at
-  // once.
-  //
-  // It is the difference between working and not working: to anyone signed out,
-  // every claimed tag reads as forbidden — including the owner's own, and an
-  // owner on a phone is signed out regularly. Sending them to a dead end at
-  // their own vehicle is the one failure this product cannot afford.
-  //
-  // It also closes an oracle. Answering differently for a real tag and an
-  // invented one tells anybody willing to guess which tags exist. Now the
-  // answer is the same for both until there is a session to judge against, and
-  // the scanned address rides through sign-in so the tap still lands on the part.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect(`/auth/verify?next=${encodeURIComponent(`/t/${tagId}`)}`)
-  }
-
+  // A caller with no session never reaches this page: middleware sends them to
+  // sign in carrying the scanned address, so the round trip still ends on the
+  // part. That also keeps a real tag and an invented one indistinguishable to
+  // anyone without a session, so the tag space cannot be used to find out which
+  // tags exist.
   const { data, error } = await supabase.rpc('resolve_tag', { p_tag_id: tagId })
 
   if (error) {

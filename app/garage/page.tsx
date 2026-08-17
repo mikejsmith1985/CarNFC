@@ -4,6 +4,7 @@ import { Car, ChevronRight } from 'lucide-react'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { SignOutButton } from '@/components/SignOutButton'
 import { SyncIndicator } from '@/components/SyncIndicator'
+import { AddVehicleSheet } from '@/components/garage/AddVehicleSheet'
 import { UNIT_DISTANCE } from '@/lib/constants'
 import type { PowerSource } from '@/types/servicecard'
 
@@ -53,8 +54,12 @@ export default async function GaragePage() {
             <Car size={32} className="mx-auto text-text-muted" aria-hidden />
             <p className="mt-3 text-sm font-semibold text-text-secondary">Nothing here yet</p>
             <p className="mt-1 text-sm text-text-muted">
-              Stick a tag on a part and tap it. Setup takes two steps.
+              Stick a tag on a part and tap it. Setup takes two steps — or add a vehicle now and tag
+              it later.
             </p>
+            <div className="mx-auto mt-5 max-w-xs">
+              <AddVehicleSheet />
+            </div>
           </div>
         ) : (
           <ul className="space-y-3">
@@ -88,6 +93,10 @@ export default async function GaragePage() {
             })}
           </ul>
         )}
+
+        <div className="mt-6">
+          <AddVehicleSheet />
+        </div>
       </div>
     </main>
   )

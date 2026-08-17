@@ -95,6 +95,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Started by a press, never on its own: iOS will not speak or open a microphone unless a
     person asked for it in that moment, so a panel that began talking by itself would be
     silent on exactly the phone most likely to be propped on a wing.
+- **Garage management** (FR-048, FR-046). A vehicle could be born inside the claim flow and
+  never touched again: the garage listed vehicles and offered nothing else.
+  - **Add a vehicle** from the garage, before any tag exists. Someone setting up before their
+    tags arrive now has somewhere to start, and lands on the new vehicle rather than back on
+    a list.
+  - **Edit** year, make, model, trim, nickname and power source. The readable address is
+    deliberately left alone — it is bookmarked, shared and reached from a tag, so renaming
+    must not break a link somebody already holds. The odometer is not editable either: it
+    follows the highest confirmed reading across entries (FR-025), so a number typed here
+    would be overwritten by the next fill-up and mean nothing in the meantime.
+  - **Delete**, guarded by retyping the vehicle's name rather than a second tap. It takes
+    every component and the entire service history with it, and that history is the product.
+    The physical tags survive as unclaimed hardware, so labels can be reused rather than
+    binned.
+  - **Move a tag to another part** (FR-046). `rebindTag` had existed since the claim flow was
+    built and had never had a caller — a tag peeled off a differential and stuck on a
+    transfer case could not be re-pointed. The identifier printed on the hardware never
+    changes; only what it points at does.
 - **Integration suite against real PostgreSQL** via testcontainers, applying the real
   migrations and exercising the real policies — no mocked drivers. Covers owner isolation,
   append-only privileges, the grant surface, every CHECK constraint, override precedence

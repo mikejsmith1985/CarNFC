@@ -1,9 +1,12 @@
 // Vehicle overview: every tagged component on one vehicle. Owner-only, whether or not passport sharing is enabled.
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import type { PowerSource } from '@/types/servicecard'
 import { ChevronRight, Fuel, BatteryCharging, Wrench } from 'lucide-react'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { PassportSharing } from '@/components/PassportSharing'
+import { VehicleSettings } from '@/components/garage/VehicleSettings'
+import { TagRebinder } from '@/components/garage/TagRebinder'
 import { readShareState } from '@/app/actions/passport'
 import { UNIT_DISTANCE } from '@/lib/constants'
 
@@ -26,7 +29,7 @@ export default async function VehicleOverviewPage({ params }: PageProps) {
 
   const { data: vehicle } = await supabase
     .from('vehicles')
-    .select('id, slug, nickname, year, make, model, trim, current_odometer')
+    .select('id, slug, nickname, year, make, model, trim, power_source, current_odometer')
     .eq('slug', vehicleSlug)
     .maybeSingle()
 
@@ -39,6 +42,12 @@ export default async function VehicleOverviewPage({ params }: PageProps) {
     .select('id, slug, display_name, is_energy_port, energy_mode_hint')
     .eq('vehicle_id', vehicle.id as string)
     .order('display_name', { ascending: true })
+
+  const { data: boundTags } = await supabase
+    .from('tags')
+    .select('id, component_id')
+    .eq('vehicle_id', vehicle.id as string)
+    .order('claimed_at', { ascending: true })
 
   const shareState = await readShareState(vehicle.id as string)
 
@@ -104,11 +113,41 @@ export default async function VehicleOverviewPage({ params }: PageProps) {
         </ul>
       )}
 
-      <div className="mt-8">
+      <div className="mt-8 space-y-6">
         <PassportSharing
           vehicleId={vehicle.id as string}
           initiallyShared={shareState.isShared}
           initialIncludeCosts={shareState.includeCosts}
+        />
+
+        <TagRebinder
+          vehicleId={vehicle.id as string}
+          tags={(boundTags ?? [])
+            .filter((tag) => tag.component_id !== null)
+            .map((tag) => ({
+              tagId: tag.id as string,
+              componentId: tag.component_id as string,
+              componentName:
+                (components ?? []).find((component) => component.id === tag.component_id)
+                  ?.display_name ?? 'Unknown part',
+            }))}
+          components={(components ?? []).map((component) => ({
+            id: component.id as string,
+            displayName: component.display_name as string,
+          }))}
+        />
+
+        <VehicleSettings
+          vehicleId={vehicle.id as string}
+          displayName={(vehicle.nickname as string | null) || identity || 'this vehicle'}
+          vehicle={{
+            year: vehicle.year as number | null,
+            make: vehicle.make as string | null,
+            model: vehicle.model as string | null,
+            trim: vehicle.trim as string | null,
+            nickname: vehicle.nickname as string | null,
+            powerSource: vehicle.power_source as PowerSource,
+          }}
         />
       </div>
     </main>

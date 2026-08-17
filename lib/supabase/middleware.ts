@@ -7,10 +7,16 @@ import { NextResponse, type NextRequest } from 'next/server'
  *
  * `/api/test` is how a UX run obtains a session in the first place, so gating it
  * behind a session is circular. Those routes 404 in production regardless.
+ *
+ * `/t/` is deliberately absent. A tag tap needs a session to resolve against,
+ * and the check belongs here rather than in the page: refreshing a token is
+ * only durable where the rotated cookies can be written back, and a Server
+ * Component cannot write cookies. A refresh landing there is thrown away, and
+ * the next request presents a token the server has already rotated — which,
+ * with reuse detection on, ends the session and asks for a new code.
  */
 const PUBLIC_PATH_PREFIXES = [
   '/p/',
-  '/t/',
   '/auth',
   '/offline',
   '/tag-unavailable',

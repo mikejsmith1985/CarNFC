@@ -14,6 +14,37 @@ export const vehicleSchema = z.object({
 
 export type VehicleInput = z.infer<typeof vehicleSchema>
 
+/**
+ * Editing an existing vehicle: the same fields, plus which vehicle.
+ *
+ * The odometer is deliberately not editable. It is derived from the highest
+ * confirmed reading across every entry (FR-025), so a figure typed here would be
+ * overwritten by the next fill-up and would mean nothing in the meantime.
+ */
+export const vehicleUpdateSchema = vehicleSchema.extend({
+  vehicleId: z.uuid(),
+})
+
+export type VehicleUpdateInput = z.infer<typeof vehicleUpdateSchema>
+
+/**
+ * Deleting a vehicle, guarded by retyping its name.
+ *
+ * A vehicle takes its components, its tags and its entire service history with
+ * it, and none of that is recoverable. Retyping the name is the difference
+ * between an intention and a mis-tap on a phone held in one hand.
+ */
+export const vehicleDeleteSchema = z.object({
+  vehicleId: z.uuid(),
+  confirmationText: z.string().min(1),
+  expectedText: z.string().min(1),
+})
+
+/** Whether the retyped name matches, ignoring case and stray spaces. */
+export function isDeletionConfirmed(confirmationText: string, expectedText: string): boolean {
+  return confirmationText.trim().toLowerCase() === expectedText.trim().toLowerCase()
+}
+
 export const componentSpecSchema = z.object({
   specKey: z.string().min(1).max(64),
   kind: z.enum(['torque', 'capacity', 'fluid', 'tool', 'part_number', 'interval']),
