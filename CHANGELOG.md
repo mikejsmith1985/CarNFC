@@ -98,6 +98,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Walking to the inbox to fetch the sign-in code lost your place.** The second step of
+  sign-in requires leaving the page — the code arrives by email — but which step to show
+  was held only in component state, so returning to the tab landed on an empty email field
+  having just been sent a perfectly good code. On a phone the tab is often discarded
+  outright while the mail app is open, so the record now lives in `localStorage`, and the
+  step is *derived* from it rather than mirrored into state: sending a code writes the
+  record and the form follows, and the record lapsing or being cleared returns the form to
+  the email step on its own. There is no second copy of the truth to fall out of step, and
+  a code sent in another tab moves this one. The remaining validity is shown as a live
+  countdown matching `otp_expiry`, and a lapsed code clears itself with an explanation
+  rather than silently failing on submit.
+- The resumed step is gated behind hydration completing. The server cannot see the device's
+  storage, so it always renders the email step; showing the code step on the first client
+  render instead made React find markup it did not expect and throw the entire form away and
+  rebuild it. `useSyncExternalStore`'s server snapshot did not prevent this on its own —
+  verified in the browser against the actual hydration error, not assumed.
 - **No table privileges existed at all — the application was dead on arrival.** Row Level
   Security decides which *rows* a role may touch; it does not grant permission to touch the
   table, and PostgreSQL refuses the statement before any policy is consulted. The schema
