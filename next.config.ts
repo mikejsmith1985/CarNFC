@@ -10,10 +10,15 @@ import type { NextConfig } from 'next'
 const withSerwist = withSerwistInit({
   swSrc: 'app/sw.ts',
   swDest: 'public/sw.js',
-  // Disabled in development so a stale worker never masks a code change.
+  // Disabled in development so a stale worker never masks a code change, unless
+  // asked for explicitly: the UX layer has to exercise offline behaviour, and
+  // without a worker there is nothing to serve the page when the radio is off —
+  // the specs fail on a blank, unhydrated page rather than on the feature.
   // Also disabled when OpenNext drives the build: it invokes `next build`
   // itself, and Serwist's webpack injection conflicts with the Workers bundle.
-  disable: process.env.NODE_ENV === 'development' || process.env.OPEN_NEXT_BUILD === '1',
+  disable:
+    (process.env.NODE_ENV === 'development' && process.env.SERVICECARD_ENABLE_SW !== '1') ||
+    process.env.OPEN_NEXT_BUILD === '1',
 })
 
 /**

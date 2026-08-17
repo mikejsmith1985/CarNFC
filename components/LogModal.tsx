@@ -104,7 +104,11 @@ export function LogModal({
   currentOdometer,
   specs,
 }: LogModalProps) {
-  const [category, setCategory] = useState<LogCategory>(initialCategory)
+  // Null means "whatever the button that opened this asked for". Only a tab
+  // press inside the sheet overrides it, and only until the sheet closes —
+  // holding the category outright meant the modal kept the first one it ever
+  // saw, so Repair and Upgrade both opened the Maintenance form.
+  const [categoryOverride, setCategoryOverride] = useState<LogCategory | null>(null)
   const [draft, setDraft] = useState<ServiceLogDraft>(() => emptyDraft(currentOdometer))
   const [overrides, setOverrides] = useState<DraftOverride[]>([])
   const [attachments, setAttachments] = useState<PendingAttachment[]>([])
@@ -113,8 +117,7 @@ export function LogModal({
   const [formError, setFormError] = useState<string | null>(null)
   const [isSaving, startSaving] = useTransition()
 
-  // The modal reopens on whichever quick action was pressed.
-  const activeCategory = isOpen ? category : initialCategory
+  const activeCategory = categoryOverride ?? initialCategory
 
   const setField = (field: keyof ServiceLogDraft, value: string) => {
     setDraft((previous) => ({ ...previous, [field]: value }))
@@ -138,7 +141,7 @@ export function LogModal({
   )
 
   const handleCategoryChange = (next: LogCategory) => {
-    setCategory(next)
+    setCategoryOverride(next)
     setFormError(null)
     // A different category asks different questions, so a run in progress is
     // now asking about fields that no longer exist.
@@ -151,6 +154,13 @@ export function LogModal({
       notes: previous.notes,
     }))
     if (next !== 'upgrade') setOverrides([])
+  }
+
+  /** Closes the sheet and forgets anything chosen inside it. */
+  const handleClose = () => {
+    setCategoryOverride(null)
+    setIsHandsFree(false)
+    onClose()
   }
 
   const handleSubmit = () => {
@@ -190,14 +200,14 @@ export function LogModal({
       setOverrides([])
       setAttachments([])
       setOdometerConfirmed(false)
-      onClose()
+      handleClose()
     })
   }
 
   return (
     <Sheet
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title={`Log — ${componentName}`}
       headerAction={
         <button

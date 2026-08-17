@@ -10,6 +10,33 @@ describe('log categories (US2)', () => {
     cy.contains('button', 'Service').realClick()
   })
 
+  // The quick action is the whole point of the card: three buttons, each of
+  // which must open what it says on it (FR-011). A modal that remembers the
+  // first category it ever saw sends Repair and Upgrade to the wrong form.
+  it('opens the category the quick action names, every time (FR-011)', () => {
+    cy.contains('Fluid or consumable').should('be.visible')
+    cy.contains('button', 'Close').should('not.exist')
+
+    // Scoped to the card's own action row: the sheet's category tabs carry the
+    // same words, and matching one of those would test nothing.
+    const quickAction = (label: string) =>
+      cy.get('[aria-label="Quick log actions"]').contains('button', label)
+
+    // The card holds two sheets, both with a Close control, so the open one is
+    // the only safe target.
+    cy.get('dialog[open]').find('[aria-label="Close"]').realClick()
+    cy.get('dialog[open]').should('not.exist')
+    quickAction('Repair').realClick()
+    cy.contains('Symptom').should('be.visible')
+    cy.contains('Fluid or consumable').should('not.exist')
+
+    cy.get('dialog[open]').find('[aria-label="Close"]').realClick()
+    cy.get('dialog[open]').should('not.exist')
+    quickAction('Upgrade').realClick()
+    cy.contains('label', 'Product name').should('be.visible')
+    cy.contains('Symptom').should('not.exist')
+  })
+
   it('shows only the selected category fields (FR-017)', () => {
     cy.contains('Fluid or consumable').should('be.visible')
     cy.contains('Symptom').should('not.exist')
@@ -20,7 +47,9 @@ describe('log categories (US2)', () => {
     cy.contains('[role="tab"]', 'Repair').realClick()
 
     cy.contains('Symptom').should('be.visible')
-    cy.contains('Re-check after').should('be.visible')
+    // Below the sheet's fold on a 390x844 phone. Scrolling to it is what a
+    // thumb does; asserting visibility without scrolling asserts the fold.
+    cy.contains('Re-check after').scrollIntoView().should('be.visible')
     // Nothing from Maintenance may linger.
     cy.contains('Filter part #').should('not.exist')
     cy.contains('Fluid or consumable').should('not.exist')
@@ -35,7 +64,7 @@ describe('log categories (US2)', () => {
   it('reveals the spec-override editor only for Upgrade (FR-022)', () => {
     cy.contains('Specs this upgrade changes').should('not.exist')
     cy.contains('[role="tab"]', 'Upgrade').realClick()
-    cy.contains('Specs this upgrade changes').should('be.visible')
+    cy.contains('Specs this upgrade changes').scrollIntoView().should('be.visible')
   })
 
   it('shows Replace its own part and warranty fields', () => {
@@ -62,7 +91,7 @@ describe('log categories (US2)', () => {
   })
 
   it('offers attachments within the documented limit (FR-026)', () => {
-    cy.contains('Add photo or PDF').should('be.visible').and('contain', '5 left')
+    cy.contains('Add photo or PDF').scrollIntoView().should('be.visible').and('contain', '5 left')
   })
 })
 

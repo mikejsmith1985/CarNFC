@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { ToggleField } from '@/components/ui/Field'
 import { mintPassportShare, revokePassportShare } from '@/app/actions/passport'
 import { COPY_FEEDBACK_MS } from '@/lib/constants'
+import { hydrationMarker, useIsHydrated } from '@/components/ui/useIsHydrated'
 
 interface PassportSharingProps {
   vehicleId: string
@@ -32,6 +33,7 @@ export function PassportSharing({
   const [hasCopied, setHasCopied] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [isWorking, startWorking] = useTransition()
+  const isReady = useIsHydrated()
 
   const handleMint = () => {
     setFormError(null)
@@ -67,7 +69,10 @@ export function PassportSharing({
   }
 
   return (
-    <section className="rounded-card border border-border bg-surface-raised p-4">
+    <section
+      className="rounded-card border border-border bg-surface-raised p-4"
+      {...hydrationMarker(isReady)}
+    >
       <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-secondary">
         <Share2 size={16} aria-hidden />
         Share service record

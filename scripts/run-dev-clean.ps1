@@ -6,6 +6,11 @@
 # process whose name would match one.
 
 param(
+    # Generates the service worker in development. Off by default so a stale
+    # worker never hides a code change; required for the offline UX specs,
+    # which have nothing to serve the page from without it.
+    [switch]$WithServiceWorker,
+
     [int]$Port = 3100,
     [switch]$SkipDatabaseReset
 )
@@ -78,6 +83,11 @@ Write-Host "Starting Next.js dev server on port $Port" -ForegroundColor Green
 Push-Location $repositoryRoot
 try {
     $env:PORT = "$Port"
+    if ($WithServiceWorker) {
+        Write-Host 'Service worker enabled for this run' -ForegroundColor Yellow
+        $env:SERVICECARD_ENABLE_SW = '1'
+    }
+
     & npx next dev --webpack --port $Port
 }
 finally {

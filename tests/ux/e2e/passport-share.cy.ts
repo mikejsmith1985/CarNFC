@@ -1,6 +1,25 @@
 // Sharing a read-only passport (US6), including the controls that must be absent and the headers that must be present.
 
-import { DEMO } from '../support/fixtures'
+import { cardPath, DEMO } from '../support/fixtures'
+
+/**
+ * Opens the vehicle with sharing off, whatever the last test left behind.
+ *
+ * Sharing is stored on the vehicle, so it survives from one test to the next.
+ * Without this, the second test onwards finds "Create a new link" instead of
+ * "Create share link" and the cost toggle is hidden — every one of them failed
+ * on state a previous test had left lying around.
+ */
+function openVehicleWithSharingOff() {
+  cy.visit(`/v/${DEMO.vehicleSlug}`)
+  cy.get('[data-ready="true"]') // a real click before hydration does nothing
+
+  cy.get('body').then(($body) => {
+    if ($body.find('button:contains("Stop sharing")').length === 0) return
+    cy.contains('button', 'Stop sharing').realClick()
+    cy.contains('button', 'Create share link', { timeout: 15_000 }).should('be.visible')
+  })
+}
 
 describe('passport sharing (US6)', () => {
   beforeEach(() => {
@@ -14,7 +33,7 @@ describe('passport sharing (US6)', () => {
   })
 
   it('mints a link, which a guest can read with no account', () => {
-    cy.visit(`/v/${DEMO.vehicleSlug}`)
+    openVehicleWithSharingOff()
     cy.contains('button', 'Create share link').realClick()
 
     cy.contains('/p/', { timeout: 15_000 })
@@ -29,7 +48,7 @@ describe('passport sharing (US6)', () => {
   })
 
   it('presents no write control anywhere on the guest page (FR-050)', () => {
-    cy.visit(`/v/${DEMO.vehicleSlug}`)
+    openVehicleWithSharingOff()
     cy.contains('button', 'Create share link').realClick()
 
     cy.contains('/p/')
@@ -47,7 +66,20 @@ describe('passport sharing (US6)', () => {
   })
 
   it('omits costs unless the owner opted in (FR-050)', () => {
-    cy.visit(`/v/${DEMO.vehicleSlug}`)
+    // The demo fixtures carry no costs, so one is recorded here. Asserting that
+    // a page with nothing to hide hides nothing proves only that the page
+    // loaded.
+    const paidAmount = '184.62'
+
+    cy.visit(cardPath(DEMO.components.frontDiff))
+    cy.get('[data-ready="true"]')
+    cy.get('[aria-label="Quick log actions"]').contains('button', 'Service').realClick()
+    cy.contains('[role="tab"]', 'Replace').realClick()
+    cy.contains('label', 'Cost').find('input').type(paidAmount)
+    cy.contains('button', 'Save entry').realClick()
+    cy.get('dialog[open]', { timeout: 15_000 }).should('not.exist')
+
+    openVehicleWithSharingOff()
     cy.contains('button', 'Create share link').realClick()
 
     cy.contains('/p/')
@@ -55,12 +87,20 @@ describe('passport sharing (US6)', () => {
       .then((shareUrl) => {
         cy.clearCookies()
         cy.visit(new URL(shareUrl.trim()).pathname)
-        cy.get('body').should('not.contain', '$')
+
+        // Scoped to what is rendered, and matched against real money. Scanning
+        // the whole <body> also reads Next's inline data payload, which is full
+        // of '$' markers no guest ever sees.
+        cy.contains('Vehicle service record').should('be.visible')
+        cy.get('main').should('not.contain', paidAmount)
+        cy.get('main')
+          .invoke('text')
+          .should('not.match', /\$\s?\d/)
       })
   })
 
   it('refuses the link once revoked, and keeps refusing it after a new one is minted', () => {
-    cy.visit(`/v/${DEMO.vehicleSlug}`)
+    openVehicleWithSharingOff()
     cy.contains('button', 'Create share link').realClick()
 
     cy.contains('/p/')
@@ -78,7 +118,7 @@ describe('passport sharing (US6)', () => {
   })
 
   it('carries the headers that stop indexing and link previews (FR-051b)', () => {
-    cy.visit(`/v/${DEMO.vehicleSlug}`)
+    openVehicleWithSharingOff()
     cy.contains('button', 'Create share link').realClick()
 
     cy.contains('/p/')

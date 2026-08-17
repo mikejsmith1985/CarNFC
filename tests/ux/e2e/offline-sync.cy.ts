@@ -1,22 +1,32 @@
 // The offline journey (US5): read a cached card with no signal, log against it, and watch it upload by itself.
 
-import { cardPath, DEMO } from '../support/fixtures'
+import { cardPath, DEMO, HYDRATION_TIMEOUT_MS } from '../support/fixtures'
 
 /** Cypress cannot toggle a real radio, so the browser's own offline mode is used. */
+// Wrapped so Cypress waits for the emulation to actually take effect. A bare
+// promise is not part of the command queue, so the next command — and the next
+// test — could run before the radio had changed, leaving a whole spec running
+// offline without saying so.
 function goOffline() {
   cy.log('**going offline**')
-  return Cypress.automation('remote:debugger:protocol', {
-    command: 'Network.emulateNetworkConditions',
-    params: { offline: true, latency: 0, downloadThroughput: 0, uploadThroughput: 0 },
-  })
+  return cy.wrap(
+    Cypress.automation('remote:debugger:protocol', {
+      command: 'Network.emulateNetworkConditions',
+      params: { offline: true, latency: 0, downloadThroughput: 0, uploadThroughput: 0 },
+    }),
+    { log: false },
+  )
 }
 
 function goOnline() {
   cy.log('**going online**')
-  return Cypress.automation('remote:debugger:protocol', {
-    command: 'Network.emulateNetworkConditions',
-    params: { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 },
-  })
+  return cy.wrap(
+    Cypress.automation('remote:debugger:protocol', {
+      command: 'Network.emulateNetworkConditions',
+      params: { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 },
+    }),
+    { log: false },
+  )
 }
 
 describe('offline capture and sync (US5)', () => {
@@ -30,6 +40,7 @@ describe('offline capture and sync (US5)', () => {
 
   it('renders a previously visited card from cache with a staleness stamp (FR-038)', () => {
     cy.visit(cardPath(DEMO.components.frontDiff))
+    cy.get('[data-ready="true"]', { timeout: HYDRATION_TIMEOUT_MS })
     cy.contains('Tools & Specifications').should('be.visible')
 
     goOffline()
@@ -41,6 +52,7 @@ describe('offline capture and sync (US5)', () => {
 
   it('accepts a log entry with no connectivity and marks it pending (FR-039)', () => {
     cy.visit(cardPath(DEMO.components.frontDiff))
+    cy.get('[data-ready="true"]', { timeout: HYDRATION_TIMEOUT_MS })
     goOffline()
 
     cy.contains('button', 'Service').realClick()
@@ -53,6 +65,7 @@ describe('offline capture and sync (US5)', () => {
 
   it('uploads by itself when signal returns, with no button to press (FR-040)', () => {
     cy.visit(cardPath(DEMO.components.frontDiff))
+    cy.get('[data-ready="true"]', { timeout: HYDRATION_TIMEOUT_MS })
     goOffline()
 
     cy.contains('button', 'Service').realClick()
@@ -77,6 +90,7 @@ describe('offline capture and sync (US5)', () => {
 
   it('shows the offline state in the sync indicator', () => {
     cy.visit(cardPath(DEMO.components.frontDiff))
+    cy.get('[data-ready="true"]', { timeout: HYDRATION_TIMEOUT_MS })
     goOffline()
     cy.window().trigger('offline')
 

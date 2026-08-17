@@ -122,6 +122,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Two of the card's three quick actions opened the wrong form.** `LogModal` held the
+  category in its own state, set the first time it mounted and never revisited, so Repair
+  and Upgrade both opened Maintenance. The three buttons are the card's entire purpose. The
+  button that opens the sheet now decides the category; a tab press inside overrides it, and
+  only until the sheet closes.
+- **Passport sharing lost every click.** The panel carried no hydration marker, so a real
+  click landed before React was listening — no link, no error, no pending state, nothing.
+  It now advertises readiness the way every other interactive root already does.
+- Serwist can be enabled in development with `run-dev-clean.ps1 -WithServiceWorker`. Without
+  a worker there is nothing to serve the page when the radio is off, so the offline specs
+  were failing on a blank page rather than on the behaviour they describe.
 - **Tapping a claimed tag while signed out was a dead end.** Everything claimed reads as
   forbidden to a caller with no session — including the owner's own tag, and an owner on a
   phone is signed out regularly. The tap landed on "unavailable" at their own vehicle, with

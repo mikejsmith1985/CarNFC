@@ -24,3 +24,13 @@ export function cardPath(componentSlug: string): string {
  * because a call site can always override a class (FR-014, SC-008).
  */
 export const MIN_TOUCH_TARGET = 48
+
+/**
+ * How long to allow for a page to become interactive.
+ *
+ * The dev server compiles a route the first time it is asked for, so whichever
+ * spec runs first pays tens of seconds that a warm route never does. Cypress's
+ * four-second default turns that into a failure that looks like a broken page —
+ * the giveaway is markup with no styling, because the chunks had not arrived.
+ */
+export const HYDRATION_TIMEOUT_MS = 30_000
