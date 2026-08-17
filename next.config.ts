@@ -33,10 +33,17 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: TUNNEL_DEV_HOSTS,
 
   experimental: {
+    /*
+      Server Actions carry CSRF protection that compares the request's Origin to
+      its Host. A tunnel breaks that by design — the browser sees the public
+      tunnel hostname while the server sees localhost — so every action is
+      rejected before it runs. Sign-in is a Server Action, so without this a
+      phone can load the form and never manage to send itself a code.
+
+      A development convenience only. Production serves from its own origin,
+      where the Origin and Host match naturally and none of this applies.
+    */
     serverActions: {
-      // Server Actions are rejected when the request's origin does not match the
-      // host, which is exactly what a tunnel does. Sign-in is a Server Action,
-      // so without this the phone can load the form but never send a code.
       allowedOrigins: [...TUNNEL_DEV_HOSTS, 'localhost:3100', '127.0.0.1:3100'],
     },
   },

@@ -412,3 +412,9 @@ enabled = true
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+# The default magic-link email carries only a link. The app asks for a six-digit
+# code, so the template must include {{ .Token }} or the email is unusable.
+[auth.email.template.magic_link]
+subject = "Your ServiceCard sign-in code"
+content_path = "./supabase/templates/magic-link.html"

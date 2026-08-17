@@ -1,0 +1,25 @@
+<!--
+  Sign-in email.
+
+  Supabase's default magic-link template contains only a link. The app asks for
+  a six-digit code, so without {{ .Token }} the email is unusable — the form
+  waits for something that was never sent.
+
+  Both are offered: the code for someone typing it on the phone they scanned
+  with, and the link for anyone reading mail on the same device.
+-->
+<h2>Your ServiceCard sign-in code</h2>
+
+<p style="font-size: 32px; letter-spacing: 6px; font-weight: bold; margin: 24px 0">
+  {{ .Token }}
+</p>
+
+<p>Enter this code in ServiceCard to finish signing in. It expires in one hour.</p>
+
+<p style="margin-top: 24px; font-size: 13px; color: #666">
+  Reading this on the same device? <a href="{{ .ConfirmationURL }}">Sign in directly</a>.
+</p>
+
+<p style="margin-top: 24px; font-size: 13px; color: #666">
+  If you didn't ask to sign in, you can ignore this email.
+</p>

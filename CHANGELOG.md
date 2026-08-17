@@ -133,17 +133,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a code sent in another tab moves this one. The remaining validity is shown as a live
   countdown matching `otp_expiry`, and a lapsed code clears itself with an explanation
   rather than silently failing on submit.
-- **A phone could not reach the dev server through a tunnel at all.** Next blocks dev
-  resources requested from a host it is not bound to, so the page rendered but the client
-  bundle was withheld — it never became interactive, and every button looked broken while
-  the code behind it was fine. Server Actions were rejected for the same origin-versus-host
-  reason, which is the entire sign-in path. Both allowances are now declared, and both are
-  inert in a production build.
 - The resumed step is gated behind hydration completing. The server cannot see the device's
   storage, so it always renders the email step; showing the code step on the first client
   render instead made React find markup it did not expect and throw the entire form away and
   rebuild it. `useSyncExternalStore`'s server snapshot did not prevent this on its own —
-  verified in the browser against the actual hydration error, not assumed.
+  verified in the browser against the actual hydration error, not assumed. The gate waits on
+  a timer rather than an animation frame, because a browser paints no frames for a hidden
+  tab — and a tab restored from behind the mail app is precisely the case this serves.
+- **The app was unusable through a tunnel, silently.** The dev server refuses cross-origin
+  requests for its own client chunks, so a tunnelled page rendered on the server but never
+  hydrated — every button looked correct and did nothing. `allowedDevOrigins` fixes it, and
+  `serverActions.allowedOrigins` covers the CSRF check a tunnel breaks by design, which is
+  the entire sign-in path. Both are inert in a production build.
+- **The sign-in email carried no code.** Supabase's default magic-link template omits
+  `{{ .Token }}`, so the form asked for six digits that were never sent.
+  `supabase/templates/magic-link.html` supplies both the code and the link. This applies to
+  hosted Supabase as well, not only the local stack.
 - **No table privileges existed at all — the application was dead on arrival.** Row Level
   Security decides which *rows* a role may touch; it does not grant permission to touch the
   table, and PostgreSQL refuses the statement before any policy is consulted. The schema
