@@ -49,9 +49,9 @@ if (-not $SkipDatabaseReset) {
     Write-Host "Resetting local Supabase database to seed state" -ForegroundColor Yellow
     Push-Location $repositoryRoot
     try {
-        & pnpm dlx supabase@2.114.0 db reset --local
+        & npx --yes supabase@2.114.0 db reset --local
         if ($LASTEXITCODE -ne 0) {
-            throw "Database reset failed with exit code $LASTEXITCODE. Is the local stack running? Try: pnpm db:start"
+            throw "Database reset failed with exit code $LASTEXITCODE. Is the local stack running? Try: npm run db:start"
         }
     }
     finally {
@@ -78,7 +78,7 @@ Write-Host "Starting Next.js dev server on port $Port" -ForegroundColor Green
 Push-Location $repositoryRoot
 try {
     $env:PORT = "$Port"
-    & pnpm next dev --port $Port
+    & npx next dev --webpack --port $Port
 }
 finally {
     Pop-Location

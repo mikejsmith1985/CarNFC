@@ -72,4 +72,33 @@ describe('scan to card (US1)', () => {
       cy.contains('Front Differential').should('not.exist')
     })
   })
+
+  // The owner is the likeliest person to tap a claimed tag, and on a phone they
+  // are regularly signed out. Refusing them at their own vehicle is the one
+  // failure this whole product cannot afford.
+  it('offers sign-in when a claimed tag is tapped by someone signed out', () => {
+    cy.clearCookies()
+    cy.readDemoTag(DEMO.components.frontDiff).then((tagId) => {
+      cy.visit(`/t/${tagId}`, { failOnStatusCode: false })
+      cy.url().should('include', '/auth/verify')
+      cy.contains('Send code').should('be.visible')
+    })
+  })
+
+  it('carries the scanned tag through sign-in so the tap still lands on the part', () => {
+    cy.clearCookies()
+    cy.readDemoTag(DEMO.components.frontDiff).then((tagId) => {
+      cy.visit(`/t/${tagId}`, { failOnStatusCode: false })
+      cy.url().should('include', encodeURIComponent(`/t/${tagId}`))
+    })
+  })
+
+  // Before anyone signs in, a real tag and an invented one have to be
+  // indistinguishable — otherwise the tag space answers "does this exist?" to
+  // anybody willing to guess.
+  it('answers a claimed tag and an invented one identically when signed out', () => {
+    cy.clearCookies()
+    cy.visit('/t/nosuchtagnosuchtagnosuchta', { failOnStatusCode: false })
+    cy.url().should('include', '/auth/verify')
+  })
 })

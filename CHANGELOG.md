@@ -122,6 +122,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Tapping a claimed tag while signed out was a dead end.** Everything claimed reads as
+  forbidden to a caller with no session — including the owner's own tag, and an owner on a
+  phone is signed out regularly. The tap landed on "unavailable" at their own vehicle, with
+  no way through. A tap with no session now resolves nothing and goes to sign-in carrying
+  the scanned address, so the round trip still ends on the part.
+  This also closes an oracle. Answering differently for a real tag and an invented one told
+  anyone willing to guess which tags exist; both now give the same answer until there is a
+  session to judge against.
+- **`run-dev-clean.ps1` could not run at all.** The mandated UX-test launcher invoked `pnpm`
+  in a project that uses npm, so Article V's UX layer could not be launched the way Article V
+  requires. It now uses the project's own package manager.
+- The hands-free control moved into the log sheet's header. Anything above the fields pushes
+  them off a phone screen, and the fields are what the sheet is for.
 - **Walking to the inbox to fetch the sign-in code lost your place.** The second step of
   sign-in requires leaving the page — the code arrives by email — but which step to show
   was held only in component state, so returning to the tab landed on an empty email field

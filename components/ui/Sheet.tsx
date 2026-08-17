@@ -10,6 +10,14 @@ interface SheetProps {
   title: string
   children: ReactNode
   footer?: ReactNode
+  /**
+   * A control shown beside the title.
+   *
+   * Lives in the header rather than the body so it costs the form no vertical
+   * space: anything added above the fields pushes them off a phone screen, and
+   * the fields are what the sheet is for.
+   */
+  headerAction?: ReactNode
 }
 
 /**
@@ -19,7 +27,7 @@ interface SheetProps {
  * browser already provides the focus trap, the inert background, and the
  * escape handling, and reimplementing those is how accessibility bugs happen.
  */
-export function Sheet({ isOpen, onClose, title, children, footer }: SheetProps) {
+export function Sheet({ isOpen, onClose, title, children, footer, headerAction }: SheetProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -47,14 +55,17 @@ export function Sheet({ isOpen, onClose, title, children, footer }: SheetProps) 
       <div className="flex max-h-[88dvh] flex-col">
         <header className="flex items-center justify-between border-b border-border px-4 py-3">
           <h2 className="text-lg font-bold">{title}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="flex min-h-touch min-w-touch items-center justify-center rounded-card text-text-secondary active:bg-surface"
-          >
-            <X size={24} aria-hidden />
-          </button>
+          <div className="flex items-center gap-1">
+            {headerAction}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="flex min-h-touch min-w-touch items-center justify-center rounded-card text-text-secondary active:bg-surface"
+            >
+              <X size={24} aria-hidden />
+            </button>
+          </div>
         </header>
 
         <div className="flex-1 overflow-y-auto px-4 py-4">{children}</div>

@@ -199,6 +199,19 @@ export function LogModal({
       isOpen={isOpen}
       onClose={onClose}
       title={`Log — ${componentName}`}
+      headerAction={
+        <button
+          type="button"
+          onClick={() => setIsHandsFree(true)}
+          aria-label="Hands-free — ask me the questions"
+          aria-pressed={isHandsFree}
+          className={`flex min-h-touch min-w-touch items-center justify-center rounded-card active:bg-surface ${
+            isHandsFree ? 'text-accent' : 'text-text-secondary'
+          }`}
+        >
+          <Mic size={22} aria-hidden />
+        </button>
+      }
       footer={
         <Button variant="primary" size="large" fullWidth onClick={handleSubmit} disabled={isSaving}>
           {isSaving ? 'Saving…' : 'Save entry'}
@@ -209,9 +222,9 @@ export function LogModal({
 
       <div className="mt-4 space-y-4">
         {/*
-          Offered before any field, because the reason to want it — both hands
-          busy and dirty — is known before the first answer, not after typing
-          half the form.
+          Only present once asked for. Its entry point lives in the header,
+          because a control parked above the fields pushes them off a phone
+          screen for everyone who just wants to type.
         */}
         {isHandsFree ? (
           <HandsFreeLogger
@@ -219,16 +232,7 @@ export function LogModal({
             onAnswer={recordSpokenAnswer}
             onFinish={() => setIsHandsFree(false)}
           />
-        ) : (
-          <Button
-            variant="secondary"
-            fullWidth
-            icon={<Mic size={18} aria-hidden />}
-            onClick={() => setIsHandsFree(true)}
-          >
-            Hands-free — ask me the questions
-          </Button>
-        )}
+        ) : null}
 
         {/* Shared by every category */}
         <TextField
