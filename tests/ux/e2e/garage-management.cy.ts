@@ -105,7 +105,7 @@ describe('garage management (FR-048)', () => {
 
 describe('moving a tag to another part (FR-046)', () => {
   /*
-    Operates on an engine-oil tag, of which the seed makes several.
+    Operates on the fuel-door tag, which no other spec reads.
 
     Any spec that moves a fixture can leave it moved if it fails part-way. This
     one is therefore pointed at a component with spare tags, so a failed run
@@ -124,7 +124,7 @@ describe('moving a tag to another part (FR-046)', () => {
     cy.visit(`/v/${DEMO.vehicleSlug}`)
     cy.get('[data-ready="true"]', { timeout: HYDRATION_TIMEOUT_MS })
 
-    cy.readDemoTag(DEMO.components.engineOil).then((tagId) => {
+    cy.readDemoTag(DEMO.components.fuelDoor).then((tagId) => {
       cy.get('[aria-label="Tags on this vehicle"][data-ready="true"]', {
         timeout: HYDRATION_TIMEOUT_MS,
       })
@@ -136,12 +136,16 @@ describe('moving a tag to another part (FR-046)', () => {
       cy.contains(tagId.slice(0, TAG_ID_PREVIEW_LENGTH))
         .closest('li')
         .within(() => {
-          cy.contains('label', 'Now on').find('select').select('Transfer Case')
-          cy.contains('button', 'Move this tag').realClick()
+          cy.contains('label', 'Now on').find('select').select('Engine Oil & Filter')
+          // The button only enables once React has re-rendered with the new
+          // choice; clicking before that does nothing at all.
+          cy.contains('button', 'Move this tag').should('not.be.disabled').realClick()
+          // Navigating before the move lands cancels it mid-flight.
+          cy.contains('Moved.', { timeout: HYDRATION_TIMEOUT_MS }).should('be.visible')
         })
 
       cy.visit(`/t/${tagId}`)
-      cy.url({ timeout: HYDRATION_TIMEOUT_MS }).should('include', '/c/transfer-case')
+      cy.url({ timeout: HYDRATION_TIMEOUT_MS }).should('include', '/c/engine-oil')
 
       // Moved back in the same test, which both proves the round trip and
       // leaves the fixture where the next run expects to find it.
@@ -152,12 +156,13 @@ describe('moving a tag to another part (FR-046)', () => {
       cy.contains(tagId.slice(0, TAG_ID_PREVIEW_LENGTH))
         .closest('li')
         .within(() => {
-          cy.contains('label', 'Now on').find('select').select('Engine Oil & Filter')
-          cy.contains('button', 'Move this tag').realClick()
+          cy.contains('label', 'Now on').find('select').select('Fuel Filler')
+          cy.contains('button', 'Move this tag').should('not.be.disabled').realClick()
+          cy.contains('Moved.', { timeout: HYDRATION_TIMEOUT_MS }).should('be.visible')
         })
 
       cy.visit(`/t/${tagId}`)
-      cy.url({ timeout: HYDRATION_TIMEOUT_MS }).should('include', '/c/engine-oil')
+      cy.url({ timeout: HYDRATION_TIMEOUT_MS }).should('include', '/c/fuel-door')
     })
   })
 })

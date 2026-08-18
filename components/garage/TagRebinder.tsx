@@ -38,7 +38,7 @@ export function TagRebinder({ vehicleId, tags, components }: TagRebinderProps) {
 
   const [selection, setSelection] = useState<Record<string, string>>({})
   const [formError, setFormError] = useState<string | null>(null)
-  const [movedTagId, setMovedTagId] = useState<string | null>(null)
+  const [movedTo, setMovedTo] = useState<{ tagId: string; componentName: string } | null>(null)
   const [isWorking, startWorking] = useTransition()
 
   // Counted, not flagged, so consecutive moves each refresh. A refresh called
@@ -58,14 +58,20 @@ export function TagRebinder({ vehicleId, tags, components }: TagRebinderProps) {
     if (targetComponentId === tag.componentId) return
 
     setFormError(null)
-    setMovedTagId(null)
+    setMovedTo(null)
+
+    // Captured before the move, because after it the list re-renders and the
+    // component this tag used to be on is no longer what the row describes.
+    const destinationName =
+      components.find((component) => component.id === targetComponentId)?.displayName ?? 'the part'
+
     startWorking(async () => {
       const result = await rebindTag(tag.tagId, vehicleId, targetComponentId)
       if (!result.ok) {
         setFormError(result.error)
         return
       }
-      setMovedTagId(tag.tagId)
+      setMovedTo({ tagId: tag.tagId, componentName: destinationName })
       setMoveCount((previous) => previous + 1)
     })
   }
@@ -122,9 +128,9 @@ export function TagRebinder({ vehicleId, tags, components }: TagRebinderProps) {
                 {isWorking ? 'Moving…' : 'Move this tag'}
               </Button>
 
-              {movedTagId === tag.tagId ? (
+              {movedTo?.tagId === tag.tagId ? (
                 <p role="status" className="mt-2 text-sm text-success">
-                  Moved. Tapping it now opens {tag.componentName}.
+                  Moved. Tapping it now opens {movedTo.componentName}.
                 </p>
               ) : null}
             </li>

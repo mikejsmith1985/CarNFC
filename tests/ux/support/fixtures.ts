@@ -8,9 +8,8 @@ export const DEMO = {
   components: {
     frontDiff: 'front-diff',
     engineOil: 'engine-oil',
+    /** Also the tag-move spec's fixture: no other spec reads this tag. */
     fuelDoor: 'fuel-door',
-    /** Used only by the tag-move spec, so moving it cannot disturb another. */
-    transferCase: 'transfer-case',
   },
 } as const
 

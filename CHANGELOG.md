@@ -100,6 +100,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   part does not exist is worse than saying the phone cannot reach it. The redirect does not yet
   win over the precached not-found page in every case, which is the one offline spec still
   failing.
+- **Moving a tag confirmed the wrong part.** The message named the component the tag had just
+  left rather than the one it now opens, which is precisely backwards for the only sentence
+  telling you the move worked.
 - **The offline specs were offline before they started.** `Cypress.automation` is an ordinary
   function, so calling it at the top level of a test ran it while the test body was still being
   read — before the first `cy.visit`. Every test that mentioned going offline anywhere was
