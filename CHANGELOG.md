@@ -95,6 +95,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Started by a press, never on its own: iOS will not speak or open a microphone unless a
     person asked for it in that moment, so a panel that began talking by itself would be
     silent on exactly the phone most likely to be propped on a wing.
+- A card opened with no signal and no saved copy redirects to the offline page rather than
+  falling through to the not-found page. Telling someone standing at their own vehicle that the
+  part does not exist is worse than saying the phone cannot reach it. The redirect does not yet
+  win over the precached not-found page in every case, which is the one offline spec still
+  failing.
 - **The offline specs were offline before they started.** `Cypress.automation` is an ordinary
   function, so calling it at the top level of a test ran it while the test body was still being
   read — before the first `cy.visit`. Every test that mentioned going offline anywhere was
