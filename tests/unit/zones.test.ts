@@ -109,3 +109,56 @@ describe('zoneForTemplate', () => {
     expect(zoneForTemplate('cup-holder')).toBeNull()
   })
 })
+
+describe('an owner overriding where a part lives', () => {
+  const zone = findZone('under-hood')!
+
+  it('puts a part in a zone its template would not have chosen', () => {
+    const parts = [{ slug: 'skid-plate', templateKey: null, zoneKey: 'under-hood' }]
+    expect(componentsInZone(zone, parts).map((part) => part.slug)).toEqual(['skid-plate'])
+  })
+
+  // Without this a hand-added part belongs to no zone at all, so a badge on the
+  // bonnet cannot reach it — the gap that made overrides necessary.
+  it('rescues a hand-made component that has no template', () => {
+    const parts = [{ slug: 'homemade', templateKey: null, zoneKey: 'underbody' }]
+    expect(componentsInZone(findZone('underbody')!, parts)).toHaveLength(1)
+  })
+
+  it('moves a part out of the zone its template implies', () => {
+    const parts = [{ slug: 'engine-oil', templateKey: 'engine-oil', zoneKey: 'underbody' }]
+    expect(componentsInZone(zone, parts)).toHaveLength(0)
+    expect(componentsInZone(findZone('underbody')!, parts)).toHaveLength(1)
+  })
+
+  it('takes a part out of every zone when told none', () => {
+    const parts = [{ slug: 'engine-oil', templateKey: 'engine-oil', zoneKey: 'none' }]
+    for (const each of listZones()) {
+      expect(componentsInZone(each, parts)).toHaveLength(0)
+    }
+  })
+
+  it('falls back to the template when no override is set', () => {
+    const parts = [{ slug: 'engine-oil', templateKey: 'engine-oil', zoneKey: null }]
+    expect(componentsInZone(zone, parts)).toHaveLength(1)
+  })
+
+  it('ignores an override naming a zone this build does not define', () => {
+    const parts = [{ slug: 'engine-oil', templateKey: 'engine-oil', zoneKey: 'boot-lid' }]
+    // Falls back to the template rather than vanishing from the app entirely.
+    expect(componentsInZone(zone, parts)).toHaveLength(1)
+  })
+
+  it('lists template-placed parts before overridden ones, so the usual order holds', () => {
+    const parts = [
+      { slug: 'skid-plate', templateKey: null, zoneKey: 'under-hood' },
+      { slug: 'coolant', templateKey: 'coolant', zoneKey: null },
+      { slug: 'engine-oil', templateKey: 'engine-oil', zoneKey: null },
+    ]
+    expect(componentsInZone(zone, parts).map((part) => part.slug)).toEqual([
+      'engine-oil',
+      'coolant',
+      'skid-plate',
+    ])
+  })
+})

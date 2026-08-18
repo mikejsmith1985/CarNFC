@@ -7,6 +7,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { PassportSharing } from '@/components/PassportSharing'
 import { VehicleSettings } from '@/components/garage/VehicleSettings'
 import { TagRebinder } from '@/components/garage/TagRebinder'
+import { ComponentZonePicker } from '@/components/zones/ComponentZonePicker'
 import { readShareState } from '@/app/actions/passport'
 import { UNIT_DISTANCE } from '@/lib/constants'
 
@@ -39,7 +40,7 @@ export default async function VehicleOverviewPage({ params }: PageProps) {
 
   const { data: components } = await supabase
     .from('components')
-    .select('id, slug, display_name, is_energy_port, energy_mode_hint')
+    .select('id, slug, display_name, template_key, zone_key, is_energy_port, energy_mode_hint')
     .eq('vehicle_id', vehicle.id as string)
     .order('display_name', { ascending: true })
 
@@ -134,6 +135,16 @@ export default async function VehicleOverviewPage({ params }: PageProps) {
           components={(components ?? []).map((component) => ({
             id: component.id as string,
             displayName: component.display_name as string,
+          }))}
+        />
+
+        <ComponentZonePicker
+          vehicleSlug={vehicle.slug as string}
+          components={(components ?? []).map((component) => ({
+            id: component.id as string,
+            displayName: component.display_name as string,
+            templateKey: component.template_key as string | null,
+            zoneKey: component.zone_key as string | null,
           }))}
         />
 

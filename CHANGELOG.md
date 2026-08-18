@@ -95,6 +95,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Started by a press, never on its own: iOS will not speak or open a microphone unless a
     person asked for it in that moment, so a panel that began talking by itself would be
     silent on exactly the phone most likely to be propped on a wing.
+- **Owners can say which zone a part belongs to.** Placement follows the template a part was
+  created from, which covers the seeded library and nothing added by hand — a part with no
+  template belonged to no zone, so no badge on the vehicle could ever reach it. A part can now
+  be placed in any zone, returned to its template default, or taken out of every zone without
+  being deleted. Template-placed parts keep the zone's working order; anything moved in follows
+  on the end rather than displacing it.
 - **Zone tags.** A tag can now cover a working area instead of a single part. One tag per
   part is the sharpest thing this product does — tap the diff, get the diff — and it does not
   scale to a whole vehicle, because nobody is putting twenty badges on a truck. A zone tag is

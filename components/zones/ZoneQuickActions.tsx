@@ -15,6 +15,8 @@ export interface ZoneComponent {
   slug: string
   displayName: string
   templateKey: string | null
+  /** Owner override for placement; null follows the template. */
+  zoneKey: string | null
   isEnergyPort: boolean
   /** Odometer reading this part is next due at, when it has an interval. */
   nextServiceMiles: number | null

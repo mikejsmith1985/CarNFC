@@ -47,7 +47,7 @@ export default async function ZoneLandingPage({ params }: PageProps) {
   const { data: components } = await supabase
     .from('components')
     .select(
-      'id, slug, display_name, template_key, is_energy_port, service_interval_miles, service_interval_days',
+      'id, slug, display_name, template_key, zone_key, is_energy_port, service_interval_miles, service_interval_days',
     )
     .eq('vehicle_id', vehicle.id as string)
 
@@ -74,6 +74,7 @@ export default async function ZoneLandingPage({ params }: PageProps) {
         slug: component.slug as string,
         displayName: component.display_name as string,
         templateKey: component.template_key as string | null,
+        zoneKey: component.zone_key as string | null,
         isEnergyPort: component.is_energy_port as boolean,
         nextServiceMiles: dueOdometer,
       }
