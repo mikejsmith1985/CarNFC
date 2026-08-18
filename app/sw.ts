@@ -12,9 +12,6 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope
 
-/** Temporary redirect: the offline page stands in, it does not replace the card. */
-const FOUND_REDIRECT = 302
-
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,
@@ -65,7 +62,11 @@ const serwist = new Serwist({
               page keeps the address honest too: the URL becomes /offline
               instead of pretending the card rendered.
             */
-            handlerDidError: async () => Response.redirect('/offline', FOUND_REDIRECT),
+            handlerDidError: async () =>
+              // `ignoreSearch` because the stored copy carries a revision in
+              // its query string, and a redirect here does not survive a
+              // navigation the browser has already committed to.
+              (await caches.match('/offline', { ignoreSearch: true })) ?? Response.error(),
           },
         ],
       }),

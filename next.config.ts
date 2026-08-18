@@ -7,9 +7,30 @@ import type { NextConfig } from 'next'
  * Next.js ships no service-worker or PWA-manifest generation of its own, which is
  * the documented framework gap that justifies this dependency (research.md R5).
  */
+/**
+ * Changes every build, so a new offline page replaces the stored one.
+ *
+ * The page is tiny and re-fetching it per deploy costs nothing next to serving
+ * a stale explanation of a feature that has moved on.
+ */
+const OFFLINE_PAGE_REVISION = crypto.randomUUID()
+
 const withSerwist = withSerwistInit({
   swSrc: 'app/sw.ts',
   swDest: 'public/sw.js',
+
+  /*
+    The offline page has to be stored ahead of time, or it cannot be shown at
+    the one moment it exists for.
+
+    Serwist stores the build's scripts and styles automatically; it does not
+    store rendered pages, because most of them are server-rendered and cannot
+    be. This one can, and without it a card opened with no signal and no saved
+    copy falls through to the not-found page — telling someone standing at
+    their own vehicle that the part does not exist, when the truth is only that
+    the phone cannot reach it.
+  */
+  additionalPrecacheEntries: [{ url: '/offline', revision: OFFLINE_PAGE_REVISION }],
   // Disabled in development so a stale worker never masks a code change, unless
   // asked for explicitly: the UX layer has to exercise offline behaviour, and
   // without a worker there is nothing to serve the page when the radio is off —

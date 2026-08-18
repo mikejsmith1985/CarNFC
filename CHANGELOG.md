@@ -100,6 +100,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   part does not exist is worse than saying the phone cannot reach it. The redirect does not yet
   win over the precached not-found page in every case, which is the one offline spec still
   failing.
+- **A card with no signal said the part did not exist.** With no connection and no saved copy
+  there is nothing to render, and the app fell through to a plain not-found page — telling
+  someone standing at their own vehicle that the part is not there, when the truth is only that
+  the phone cannot reach it. The card's not-found state now asks the radio first: no connection
+  says so and explains that anything logged meanwhile is kept and uploaded later; a genuinely
+  missing part still says that plainly, with a way back to the garage. The offline page is also
+  stored ahead of time now — Serwist keeps a build's scripts but not its rendered pages, so
+  there had been nothing to show at the one moment it exists for.
 - **Moving a tag confirmed the wrong part.** The message named the component the tag had just
   left rather than the one it now opens, which is precisely backwards for the only sentence
   telling you the move worked.
