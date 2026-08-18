@@ -28,3 +28,36 @@ import { vehicleSchema } from '@/lib/validation/vehicle'
 serviceLogSchema.safeParse({})
 energyLogSchema.safeParse({})
 vehicleSchema.safeParse({})
+
+/*
+  Every pure module the unit layer measures is imported here too.
+
+  A module's first import is charged to whichever test happens to trigger it,
+  and that one test then reads as slow enough to trip the Article V budget while
+  every later call is microseconds. It surfaced as two unrelated tests failing
+  the moment a new file was added — nothing about them had changed except which
+  one paid the import.
+
+  Importing them up front keeps the budget measuring our own logic rather than
+  the module graph loading.
+*/
+import { computeNextDue } from '@/lib/calc/reminders'
+import { isTestAuthAllowed } from '@/lib/test-support/test-auth-gate'
+import { componentsInZone, listZones } from '@/lib/zones/zones'
+import { spokenToNumber } from '@/lib/voice/number-words'
+import { interpretUtterance } from '@/lib/voice/transcript'
+import { getDictationScript } from '@/lib/voice/dictation-script'
+import { parsePendingSignIn } from '@/lib/auth/pending-sign-in'
+
+computeNextDue({
+  lastServiceOdometer: 0,
+  lastServiceDate: null,
+  intervalMiles: null,
+  intervalDays: null,
+})
+isTestAuthAllowed({ nodeEnv: 'test', enableTestAuth: undefined, requestHost: null })
+componentsInZone(listZones()[0]!, [])
+spokenToNumber('one')
+interpretUtterance('skip', 'text')
+getDictationScript('maintenance')
+parsePendingSignIn(null)

@@ -100,6 +100,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   part does not exist is worse than saying the phone cannot reach it. The redirect does not yet
   win over the precached not-found page in every case, which is the one offline spec still
   failing.
+- The unit layer's 10ms budget was being charged for module loading. A module's first import
+  fell on whichever test happened to trigger it, so adding an unrelated file made two
+  long-standing tests fail without either of them changing. Every measured module is now
+  imported up front, alongside the ICU and schema warm-ups already there.
 - **A card with no signal said the part did not exist.** With no connection and no saved copy
   there is nothing to render, and the app fell through to a plain not-found page — telling
   someone standing at their own vehicle that the part is not there, when the truth is only that
