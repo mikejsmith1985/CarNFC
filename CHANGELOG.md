@@ -95,6 +95,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Started by a press, never on its own: iOS will not speak or open a microphone unless a
     person asked for it in that moment, so a panel that began talking by itself would be
     silent on exactly the phone most likely to be propped on a wing.
+- **A saved edit appeared not to save.** Editing a vehicle, or moving a tag to another part,
+  wrote to the database and then left the old value on screen — the refresh was called from
+  inside the transition that did the writing, where it is swallowed. It reads as an edit that
+  silently failed, which is the worst way for a bug to present: the natural response is to do
+  it again.
+- **The service worker could serve a stale React payload.** Card routes were cached
+  stale-while-revalidate for everything except the page document, which included the payloads
+  the app uses to refresh itself. Everything under a vehicle now comes from the network when
+  there is one, and from the cache only when there is not.
 - **Owners can say which zone a part belongs to.** Placement follows the template a part was
   created from, which covers the seeded library and nothing added by hand — a part with no
   template belonged to no zone, so no badge on the vehicle could ever reach it. A part can now

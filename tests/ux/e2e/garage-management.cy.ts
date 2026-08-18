@@ -56,8 +56,10 @@ describe('garage management (FR-048)', () => {
   })
 
   it('renames a vehicle, and the garage shows the new name', () => {
-    const nickname = 'Bench Truck Rename'
-    const renamed = 'Bench Truck Renamed'
+    // Deliberately not a prefix of one another: asserting the old name is gone
+    // is impossible if the new name contains it.
+    const nickname = 'Bench Truck Alpha'
+    const renamed = 'Bench Truck Bravo'
     addVehicle(nickname)
 
     cy.contains('button', 'Edit details').scrollIntoView().realClick()
@@ -103,7 +105,13 @@ describe('garage management (FR-048)', () => {
 
 describe('moving a tag to another part (FR-046)', () => {
   /*
-    Operates on the transfer-case tag, which no other spec reads.
+    Operates on an engine-oil tag, of which the seed makes several.
+
+    Any spec that moves a fixture can leave it moved if it fails part-way. This
+    one is therefore pointed at a component with spare tags, so a failed run
+    cannot starve the next one — the earlier version used the only tag on its
+    component and every failure made the following run fail for a different
+    reason.
 
     An earlier version moved the front-differential tag and put it back at the
     end. That restore only runs when the test passes — precisely when it is not
@@ -116,7 +124,7 @@ describe('moving a tag to another part (FR-046)', () => {
     cy.visit(`/v/${DEMO.vehicleSlug}`)
     cy.get('[data-ready="true"]', { timeout: HYDRATION_TIMEOUT_MS })
 
-    cy.readDemoTag(DEMO.components.transferCase).then((tagId) => {
+    cy.readDemoTag(DEMO.components.engineOil).then((tagId) => {
       cy.get('[aria-label="Tags on this vehicle"][data-ready="true"]', {
         timeout: HYDRATION_TIMEOUT_MS,
       })
@@ -125,6 +133,22 @@ describe('moving a tag to another part (FR-046)', () => {
 
       // The identifier printed on the hardware never changes; only what it
       // points at does.
+      cy.contains(tagId.slice(0, TAG_ID_PREVIEW_LENGTH))
+        .closest('li')
+        .within(() => {
+          cy.contains('label', 'Now on').find('select').select('Transfer Case')
+          cy.contains('button', 'Move this tag').realClick()
+        })
+
+      cy.visit(`/t/${tagId}`)
+      cy.url({ timeout: HYDRATION_TIMEOUT_MS }).should('include', '/c/transfer-case')
+
+      // Moved back in the same test, which both proves the round trip and
+      // leaves the fixture where the next run expects to find it.
+      cy.visit(`/v/${DEMO.vehicleSlug}`)
+      cy.get('[aria-label="Tags on this vehicle"][data-ready="true"]', {
+        timeout: HYDRATION_TIMEOUT_MS,
+      })
       cy.contains(tagId.slice(0, TAG_ID_PREVIEW_LENGTH))
         .closest('li')
         .within(() => {

@@ -2,7 +2,7 @@
 
 import { defaultCache } from '@serwist/next/worker'
 import type { PrecacheEntry, SerwistGlobalConfig } from 'serwist'
-import { Serwist, StaleWhileRevalidate, NetworkFirst, NetworkOnly } from 'serwist'
+import { Serwist, NetworkFirst, NetworkOnly } from 'serwist'
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -32,31 +32,23 @@ const serwist = new Serwist({
     },
     {
       /*
-        The card's HTML, kept for when there is no signal — but never served
-        ahead of the network while there is one.
+        Everything under a vehicle — the page and the payloads that update it —
+        comes from the network whenever there is one, and from the cache only
+        when there is not.
 
-        A page document from this app names the exact build chunks it needs.
-        Handing back a stale one against a newer bundle produces a card that
-        paints and then does nothing at all: React finds markup belonging to a
-        different build and never finishes wiring it up. Every button is dead,
-        and it looks like a broken feature rather than a stale cache. Serving
-        it only when the network has actually failed keeps a tap working with no
-        signal (FR-038) without ever risking that on a tap that had one.
+        Serving any of it stale while online breaks the app in two different
+        ways. A stale page document names build chunks that no longer exist, so
+        the card paints and never wires up. A stale React payload is worse and
+        quieter: it is the mechanism by which the app refreshes itself, so a
+        saved edit writes to the database and then appears not to have happened.
+        Both look like broken features rather than a cache.
+
+        Falling back to the cache when the network fails is what keeps a tap
+        working with no signal (FR-038). The instant repaint comes from the card
+        cache in IndexedDB, not from here.
       */
-      matcher: ({ url, sameOrigin, request }) =>
-        sameOrigin && url.pathname.startsWith('/v/') && request.destination === 'document',
+      matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/v/'),
       handler: new NetworkFirst({ cacheName: 'component-cards' }),
-    },
-    {
-      /*
-        Everything else the card asks for — its data payloads — is safe to serve
-        from cache first, because none of it carries a reference to a build.
-        This is what makes a repeat tap paint inside the budget (SC-002). The
-        staleness stamp comes from IndexedDB, not from here.
-      */
-      matcher: ({ url, sameOrigin, request }) =>
-        sameOrigin && url.pathname.startsWith('/v/') && request.destination !== 'document',
-      handler: new StaleWhileRevalidate({ cacheName: 'component-card-data' }),
     },
     ...defaultCache,
   ],

@@ -123,9 +123,24 @@ describe('energy logging (US4)', () => {
   })
 
   it('explains why a partial fill produces no economy figure (FR-033)', () => {
+    // Establishes its own baseline rather than inheriting one from the test
+    // above: economy needs a previous entry AND distance between the two, so a
+    // test that supplies neither is told "no distance covered" — which is the
+    // right answer to a different question.
     cy.visit(cardPath(DEMO.components.fuelDoor))
+    cy.contains('label', 'Odometer').find('input').clear().type(String(DEMO.odometer))
+    cy.contains('label', 'Gallons pumped').find('input').type('18')
+    cy.contains('button', 'Save fill-up').realClick()
+    cy.contains('Fill-up saved', { timeout: 15_000 }).should('be.visible')
 
+    cy.visit(cardPath(DEMO.components.fuelDoor))
+    cy.contains('label', 'Odometer')
+      .find('input')
+      .clear()
+      .type(String(DEMO.odometer + 200))
     cy.contains('label', 'Gallons pumped').find('input').type('10')
+    // Splashing in ten gallons is not a full tank, so the volume between the
+    // two readings is not the fuel actually burned.
     cy.contains('button', 'Filled the tank').realClick()
 
     cy.contains('Partial fill').should('be.visible')

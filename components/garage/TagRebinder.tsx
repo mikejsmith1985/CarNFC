@@ -1,7 +1,7 @@
 // Moves a tag that has been peeled off one part and stuck on another.
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Tag as TagIcon, MoveRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -41,6 +41,16 @@ export function TagRebinder({ vehicleId, tags, components }: TagRebinderProps) {
   const [movedTagId, setMovedTagId] = useState<string | null>(null)
   const [isWorking, startWorking] = useTransition()
 
+  // Counted, not flagged, so consecutive moves each refresh. A refresh called
+  // from inside the transition that did the moving is swallowed: the tag moves
+  // in the database and the list keeps showing where it used to be.
+  const [moveCount, setMoveCount] = useState(0)
+
+  useEffect(() => {
+    if (moveCount === 0) return
+    router.refresh()
+  }, [moveCount, router])
+
   if (tags.length === 0) return null
 
   const handleMove = (tag: BoundTag) => {
@@ -56,7 +66,7 @@ export function TagRebinder({ vehicleId, tags, components }: TagRebinderProps) {
         return
       }
       setMovedTagId(tag.tagId)
-      router.refresh()
+      setMoveCount((previous) => previous + 1)
     })
   }
 

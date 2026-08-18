@@ -1,7 +1,7 @@
 // Editing and deleting one vehicle, from the vehicle's own page.
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Sheet } from '@/components/ui/Sheet'
@@ -49,6 +49,17 @@ export function VehicleSettings({ vehicleId, displayName, vehicle }: VehicleSett
   const [formError, setFormError] = useState<string | null>(null)
   const [isWorking, startWorking] = useTransition()
 
+  // Counts saves rather than holding a flag, so two saves in a row each cause a
+  // refresh. `router.refresh()` called from inside the transition that did the
+  // saving is swallowed — the write lands, the screen keeps the old name, and it
+  // reads as an edit that silently failed.
+  const [saveCount, setSaveCount] = useState(0)
+
+  useEffect(() => {
+    if (saveCount === 0) return
+    router.refresh()
+  }, [saveCount, router])
+
   const handleSave = () => {
     setFormError(null)
     startWorking(async () => {
@@ -58,7 +69,7 @@ export function VehicleSettings({ vehicleId, displayName, vehicle }: VehicleSett
         return
       }
       setIsEditing(false)
-      router.refresh()
+      setSaveCount((previous) => previous + 1)
     })
   }
 
