@@ -102,18 +102,26 @@ describe('garage management (FR-048)', () => {
 })
 
 describe('moving a tag to another part (FR-046)', () => {
+  /*
+    Operates on the transfer-case tag, which no other spec reads.
+
+    An earlier version moved the front-differential tag and put it back at the
+    end. That restore only runs when the test passes — precisely when it is not
+    needed — so a failure left the seeded tag pointing at the wrong part and
+    broke four unrelated tests in the next spec. Choosing a fixture nobody else
+    depends on removes the problem rather than trying to undo it.
+  */
   it('re-points a tag without replacing the hardware', () => {
     cy.signInAsDemoOwner()
     cy.visit(`/v/${DEMO.vehicleSlug}`)
     cy.get('[data-ready="true"]', { timeout: HYDRATION_TIMEOUT_MS })
 
-    cy.readDemoTag(DEMO.components.frontDiff).then((tagId) => {
+    cy.readDemoTag(DEMO.components.transferCase).then((tagId) => {
       cy.get('[aria-label="Tags on this vehicle"][data-ready="true"]', {
         timeout: HYDRATION_TIMEOUT_MS,
       })
         .scrollIntoView()
         .should('be.visible')
-      cy.contains(tagId.slice(0, TAG_ID_PREVIEW_LENGTH)).should('be.visible')
 
       // The identifier printed on the hardware never changes; only what it
       // points at does.
@@ -126,19 +134,6 @@ describe('moving a tag to another part (FR-046)', () => {
 
       cy.visit(`/t/${tagId}`)
       cy.url({ timeout: HYDRATION_TIMEOUT_MS }).should('include', '/c/engine-oil')
-
-      // Put it back where every other spec expects to find it.
-      cy.visit(`/v/${DEMO.vehicleSlug}`)
-      cy.get('[data-ready="true"]', { timeout: HYDRATION_TIMEOUT_MS })
-      cy.contains(tagId.slice(0, TAG_ID_PREVIEW_LENGTH))
-        .closest('li')
-        .within(() => {
-          cy.contains('label', 'Now on').find('select').select('Front Differential')
-          cy.contains('button', 'Move this tag').realClick()
-        })
-
-      cy.visit(`/t/${tagId}`)
-      cy.url({ timeout: HYDRATION_TIMEOUT_MS }).should('include', '/c/front-diff')
     })
   })
 })

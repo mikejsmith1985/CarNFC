@@ -159,6 +159,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A UX spec was breaking four unrelated tests in the next spec.** The tag-move test moved
+  the seeded front-differential tag and put it back at the end — a restore that only runs when
+  the test passes, which is exactly when it is not needed. Every failure left the fixture
+  pointing at the wrong part, and the scan-to-card suite then failed for a reason that had
+  nothing to do with scanning. It now moves a fixture no other spec reads, which removes the
+  problem rather than trying to undo it.
 - **The service worker could serve a card that paints and then does nothing.** Component
   card pages were cached with `stale-while-revalidate`, which returns the previous copy while
   it fetches a new one — including the page's HTML. A document from this app names the exact

@@ -9,6 +9,8 @@ export const DEMO = {
     frontDiff: 'front-diff',
     engineOil: 'engine-oil',
     fuelDoor: 'fuel-door',
+    /** Used only by the tag-move spec, so moving it cannot disturb another. */
+    transferCase: 'transfer-case',
   },
 } as const
 
