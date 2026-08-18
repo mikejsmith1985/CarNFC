@@ -48,7 +48,24 @@ const serwist = new Serwist({
         cache in IndexedDB, not from here.
       */
       matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/v/'),
-      handler: new NetworkFirst({ cacheName: 'component-cards' }),
+      handler: new NetworkFirst({
+        cacheName: 'component-cards',
+        plugins: [
+          {
+            /*
+              A card with no signal and no saved copy must say so.
+
+              Without this the request falls through to the precached
+              not-found page, and someone standing at their own vehicle is
+              told the part does not exist — when the truth is only that the
+              phone cannot reach it. Redirecting rather than returning the
+              page keeps the address honest too: the URL becomes /offline
+              instead of pretending the card rendered.
+            */
+            handlerDidError: async () => Response.redirect('/offline', 302),
+          },
+        ],
+      }),
     },
     ...defaultCache,
   ],

@@ -95,6 +95,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Started by a press, never on its own: iOS will not speak or open a microphone unless a
     person asked for it in that moment, so a panel that began talking by itself would be
     silent on exactly the phone most likely to be propped on a wing.
+- **The offline specs were offline before they started.** `Cypress.automation` is an ordinary
+  function, so calling it at the top level of a test ran it while the test body was still being
+  read — before the first `cy.visit`. Every test that mentioned going offline anywhere was
+  therefore offline from its opening line: the page load was cut short, markup arrived with no
+  stylesheet and no script, and the card never hydrated. It presented for a long time as a
+  hydration bug, and four separate theories were tried and discarded before the cause was
+  found. Wrapping the call in `cy.then` puts it back in command order. The suite went from one
+  passing to four, and from three minutes to fifteen seconds.
 - **A saved edit appeared not to save.** Editing a vehicle, or moving a tag to another part,
   wrote to the database and then left the old value on screen — the refresh was called from
   inside the transition that did the writing, where it is swallowed. It reads as an edit that
