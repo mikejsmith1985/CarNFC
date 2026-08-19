@@ -40,6 +40,7 @@ export function VehicleStep({ vehicles, onSelect }: VehicleStepProps) {
   const [model, setModel] = useState('')
   const [trim, setTrim] = useState('')
   const [nickname, setNickname] = useState('')
+  const [currentOdometer, setCurrentOdometer] = useState('')
   const [powerSource, setPowerSource] = useState<PowerSource>('gasoline')
   const [formError, setFormError] = useState<string | null>(null)
   const [isSaving, startSaving] = useTransition()
@@ -54,6 +55,10 @@ export function VehicleStep({ vehicles, onSelect }: VehicleStepProps) {
         trim: trim.trim() || null,
         nickname: nickname.trim() || null,
         powerSource,
+        // Asked here because this is where most vehicles are born: someone
+        // standing at the truck claiming their first tag. Left blank it starts
+        // at zero and the first logged entry raises it.
+        currentOdometer: currentOdometer.trim() === '' ? 0 : Number(currentOdometer),
       })
 
       if (!result.ok) {
@@ -139,12 +144,24 @@ export function VehicleStep({ vehicles, onSelect }: VehicleStepProps) {
         />
       </div>
 
-      <TextField
-        label="Trim"
-        placeholder="Raptor"
-        value={trim}
-        onChange={(event) => setTrim(event.target.value)}
-      />
+      <div className="grid grid-cols-2 gap-3">
+        <TextField
+          label="Trim"
+          placeholder="Raptor"
+          value={trim}
+          onChange={(event) => setTrim(event.target.value)}
+        />
+        <TextField
+          label="Odometer"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          unit="mi"
+          placeholder="112450"
+          value={currentOdometer}
+          onChange={(event) => setCurrentOdometer(event.target.value)}
+        />
+      </div>
 
       {/* Decides which energy loggers this vehicle can ever open (FR-029). */}
       <SelectField

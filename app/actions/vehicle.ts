@@ -41,6 +41,7 @@ export async function updateVehicle(input: VehicleUpdateInput): Promise<ActionRe
       trim: parsed.data.trim,
       nickname: parsed.data.nickname,
       power_source: parsed.data.powerSource,
+      current_odometer: parsed.data.currentOdometer,
     })
     // Row Level Security already limits this to the owner. Matching on the owner
     // as well turns a policy miss into zero rows rather than a silent success.

@@ -2,6 +2,9 @@
 
 import { z } from 'zod'
 
+/** Beyond any odometer ever fitted; a larger figure is a typo, not a vehicle. */
+const MAX_PLAUSIBLE_ODOMETER = 2_000_000
+
 export const vehicleSchema = z.object({
   year: z.number().int().min(1900).max(2100).nullable(),
   make: z.string().max(60).nullable(),
@@ -10,6 +13,15 @@ export const vehicleSchema = z.object({
   nickname: z.string().max(60).nullable(),
   /** Decides which energy loggers this vehicle can ever open (FR-029). */
   powerSource: z.enum(['gasoline', 'electric', 'both']),
+  /**
+   * What the dashboard reads today.
+   *
+   * A new vehicle has no entries to derive a reading from, so without a
+   * starting figure it sits at zero until something is logged — a truck bought
+   * at 112,450 miles insisting it has never been driven. Entries only ever
+   * raise it from here (FR-025).
+   */
+  currentOdometer: z.number().int().min(0).max(MAX_PLAUSIBLE_ODOMETER),
 })
 
 export type VehicleInput = z.infer<typeof vehicleSchema>
@@ -17,9 +29,9 @@ export type VehicleInput = z.infer<typeof vehicleSchema>
 /**
  * Editing an existing vehicle: the same fields, plus which vehicle.
  *
- * The odometer is deliberately not editable. It is derived from the highest
- * confirmed reading across every entry (FR-025), so a figure typed here would be
- * overwritten by the next fill-up and would mean nothing in the meantime.
+ * The odometer is editable, but only ever as a starting point or a correction:
+ * entries raise it and never lower it, so a logged reading always wins over a
+ * typed one (FR-025).
  */
 export const vehicleUpdateSchema = vehicleSchema.extend({
   vehicleId: z.uuid(),

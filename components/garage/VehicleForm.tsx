@@ -17,6 +17,7 @@ const EARLIEST_YEAR = 1900
 const LATEST_YEAR = 2100
 
 export interface VehicleDraft {
+  currentOdometer: string
   year: string
   make: string
   model: string
@@ -26,7 +27,15 @@ export interface VehicleDraft {
 }
 
 export function emptyVehicleDraft(): VehicleDraft {
-  return { year: '', make: '', model: '', trim: '', nickname: '', powerSource: 'gasoline' }
+  return {
+    currentOdometer: '',
+    year: '',
+    make: '',
+    model: '',
+    trim: '',
+    nickname: '',
+    powerSource: 'gasoline',
+  }
 }
 
 /** Turns the form's strings into the shape the schema and the database expect. */
@@ -40,6 +49,9 @@ export function toVehicleInput(draft: VehicleDraft): VehicleInput {
     trim: blankToNull(draft.trim),
     nickname: blankToNull(draft.nickname),
     powerSource: draft.powerSource,
+    // Blank means "not driven yet" rather than "unknown": the field has to
+    // produce a number, and zero is the only honest default.
+    currentOdometer: draft.currentOdometer.trim() === '' ? 0 : Number(draft.currentOdometer),
   }
 }
 
@@ -104,6 +116,18 @@ export function VehicleForm({ draft, onChange }: VehicleFormProps) {
         />
       </div>
 
+      <TextField
+        label="Odometer"
+        type="number"
+        inputMode="numeric"
+        min={0}
+        unit="mi"
+        placeholder="112450"
+        hint="What it reads today. Logged entries take over from here."
+        value={draft.currentOdometer}
+        onChange={(event) => setField('currentOdometer', event.target.value)}
+      />
+
       <SelectField
         label="Power source"
         hint="Decides which energy loggers this vehicle can open."
@@ -123,8 +147,10 @@ export function toVehicleDraft(vehicle: {
   trim: string | null
   nickname: string | null
   powerSource: PowerSource
+  currentOdometer: number
 }): VehicleDraft {
   return {
+    currentOdometer: String(vehicle.currentOdometer),
     year: vehicle.year === null ? '' : String(vehicle.year),
     make: vehicle.make ?? '',
     model: vehicle.model ?? '',

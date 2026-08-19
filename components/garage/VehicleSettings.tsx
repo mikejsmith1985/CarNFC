@@ -28,6 +28,7 @@ interface VehicleSettingsProps {
     trim: string | null
     nickname: string | null
     powerSource: PowerSource
+    currentOdometer: number
   }
 }
 

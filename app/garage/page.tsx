@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { SignOutButton } from '@/components/SignOutButton'
 import { SyncIndicator } from '@/components/SyncIndicator'
 import { AddVehicleSheet } from '@/components/garage/AddVehicleSheet'
+import { FirstRunGuide } from '@/components/garage/FirstRunGuide'
 import { UNIT_DISTANCE } from '@/lib/constants'
 import type { PowerSource } from '@/types/servicecard'
 
@@ -50,15 +51,21 @@ export default async function GaragePage() {
         </header>
 
         {(vehicles?.length ?? 0) === 0 ? (
-          <div className="rounded-card border border-dashed border-border-strong px-4 py-10 text-center">
-            <Car size={32} className="mx-auto text-text-muted" aria-hidden />
-            <p className="mt-3 text-sm font-semibold text-text-secondary">Nothing here yet</p>
-            <p className="mt-1 text-sm text-text-muted">
-              Stick a tag on a part and tap it. Setup takes two steps — or add a vehicle now and tag
-              it later.
-            </p>
-            <div className="mx-auto mt-5 max-w-xs">
-              <AddVehicleSheet />
+          <div className="space-y-4">
+            <FirstRunGuide
+              appUrl={process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.rootlevellabs.tech'}
+            />
+
+            <div className="rounded-card border border-dashed border-border-strong px-4 py-10 text-center">
+              <Car size={32} className="mx-auto text-text-muted" aria-hidden />
+              <p className="mt-3 text-sm font-semibold text-text-secondary">Nothing here yet</p>
+              <p className="mt-1 text-sm text-text-muted">
+                Stick a tag on a part and tap it. Setup takes two steps — or add a vehicle now and
+                tag it later.
+              </p>
+              <div className="mx-auto mt-5 max-w-xs">
+                <AddVehicleSheet />
+              </div>
             </div>
           </div>
         ) : (

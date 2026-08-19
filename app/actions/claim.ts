@@ -53,6 +53,7 @@ export async function createVehicle(
       trim: parsed.data.trim,
       nickname: parsed.data.nickname,
       power_source: parsed.data.powerSource,
+      current_odometer: parsed.data.currentOdometer,
     })
     .select('id, slug')
     .single()

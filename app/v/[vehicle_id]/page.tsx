@@ -158,6 +158,7 @@ export default async function VehicleOverviewPage({ params }: PageProps) {
             trim: vehicle.trim as string | null,
             nickname: vehicle.nickname as string | null,
             powerSource: vehicle.power_source as PowerSource,
+            currentOdometer: vehicle.current_odometer as number,
           }}
         />
       </div>

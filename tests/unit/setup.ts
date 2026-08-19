@@ -11,6 +11,9 @@
 */
 ;(1234.5).toLocaleString()
 new Date().toLocaleDateString()
+// Time formatting initialises separately from date formatting, and the sign-in
+// screen is the only place that uses it.
+new Date().toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
 
 /*
   Zod builds its schema objects on first import, and a discriminated union over

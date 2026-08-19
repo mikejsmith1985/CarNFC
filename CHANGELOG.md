@@ -104,6 +104,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fell on whichever test happened to trigger it, so adding an unrelated file made two
   long-standing tests fail without either of them changing. Every measured module is now
   imported up front, alongside the ICU and schema warm-ups already there.
+- **A vehicle had no way to say what its odometer reads.** The figure is derived from the
+  highest logged entry, which is right for corrections and useless for a vehicle that has no
+  entries yet: a truck bought at 112,450 miles insisted it had never been driven until something
+  was logged against it. Adding or editing a vehicle now asks for the current reading, in the
+  garage and in the claim flow where most vehicles are actually born. Entries still only ever
+  raise it, so a logged reading always wins over a typed one (FR-025).
+- **Nothing explained where tags come from.** Every screen assumed the owner had arrived by
+  tapping a tag that already existed, so somebody who bought a badge and opened the site cold had
+  no path at all — the garage offered to add a vehicle and never mentioned the thing in their
+  hand. An empty garage now explains the three steps, and offers instructions for writing a blank
+  tag, including the advice to lock it afterwards.
 - **Nothing said that asking for a new sign-in code kills the old one.** Three emails arrive
   looking identical, only the newest works, and the natural response to a rejected code is to
   request another — which destroys the one that would have worked. The code step now names the

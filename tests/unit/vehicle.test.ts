@@ -9,6 +9,7 @@ import {
 } from '@/lib/validation/vehicle'
 
 const VEHICLE = {
+  currentOdometer: 112450,
   year: 2014,
   make: 'Ford',
   model: 'F-150',
@@ -24,6 +25,7 @@ describe('vehicleSchema', () => {
 
   it('accepts a vehicle described only by nickname', () => {
     const result = vehicleSchema.safeParse({
+      currentOdometer: 0,
       year: null,
       make: null,
       model: null,
@@ -101,6 +103,7 @@ describe('saveSpecsSchema', () => {
 describe('vehicleUpdateSchema', () => {
   const validUpdate = {
     vehicleId: '018f8f7e-6a3e-7c2b-9f1a-2b3c4d5e6f70',
+    currentOdometer: 112450,
     year: 2014,
     make: 'Ford',
     model: 'F-150',
@@ -136,9 +139,11 @@ describe('vehicleUpdateSchema', () => {
     expect(vehicleUpdateSchema.safeParse(cleared).success).toBe(true)
   })
 
-  it('has no odometer field, because the odometer is derived (FR-025)', () => {
-    const parsed = vehicleUpdateSchema.safeParse({ ...validUpdate, currentOdometer: 999 })
-    expect(parsed.success && 'currentOdometer' in parsed.data).toBe(false)
+  // Correcting a typo is legitimate; hiding mileage is not. Entries only ever
+  // raise the stored reading, so a logged figure always wins over a typed one.
+  it('carries the odometer, so it can be corrected', () => {
+    const parsed = vehicleUpdateSchema.safeParse({ ...validUpdate, currentOdometer: 120000 })
+    expect(parsed.success && parsed.data.currentOdometer).toBe(120000)
   })
 })
 
@@ -165,5 +170,41 @@ describe('isDeletionConfirmed', () => {
 
   it('refuses a partial match, so a half-typed name cannot delete', () => {
     expect(isDeletionConfirmed('Rap', 'Raptor')).toBe(false)
+  })
+})
+
+describe('the vehicle odometer', () => {
+  const base = {
+    year: 2014,
+    currentOdometer: 0,
+    make: 'Ford',
+    model: 'F-150',
+    trim: 'Raptor',
+    nickname: 'Raptor',
+    powerSource: 'gasoline' as const,
+  }
+
+  // A new vehicle has no entries to derive a reading from, so without this it
+  // sits at zero until something is logged — a truck bought at 112,450 miles
+  // insisting it has never been driven.
+  it('accepts the reading the vehicle is actually on', () => {
+    const parsed = vehicleSchema.safeParse({ ...base, currentOdometer: 112_450 })
+    expect(parsed.success).toBe(true)
+  })
+
+  it('accepts zero, for something genuinely new', () => {
+    expect(vehicleSchema.safeParse({ ...base, currentOdometer: 0 }).success).toBe(true)
+  })
+
+  it('refuses a negative reading', () => {
+    expect(vehicleSchema.safeParse({ ...base, currentOdometer: -1 }).success).toBe(false)
+  })
+
+  it('refuses a fractional reading, because odometers count whole miles', () => {
+    expect(vehicleSchema.safeParse({ ...base, currentOdometer: 1.5 }).success).toBe(false)
+  })
+
+  it('refuses a reading no vehicle has ever reached', () => {
+    expect(vehicleSchema.safeParse({ ...base, currentOdometer: 9_000_000 }).success).toBe(false)
   })
 })
