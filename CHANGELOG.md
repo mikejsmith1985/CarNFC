@@ -104,6 +104,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fell on whichever test happened to trigger it, so adding an unrelated file made two
   long-standing tests fail without either of them changing. Every measured module is now
   imported up front, alongside the ICU and schema warm-ups already there.
+- **A zone tag was invisible on the vehicle it was stuck to.** The page counted components, and
+  a zone tag deliberately creates none — so a vehicle with a working tag on its bonnet reported
+  itself as untagged and offered to set up the tag that was already there. Zone tags now appear
+  under "Tagged areas", each linking to what it opens, and the empty state counts both kinds.
 - **Tag instructions disappeared the moment a vehicle was added.** They lived only on an empty
   garage, so they vanished exactly when someone was about to put a tag on the vehicle they had
   just created — leaving a page that said "no tags yet" and offered no way to get one. The offer

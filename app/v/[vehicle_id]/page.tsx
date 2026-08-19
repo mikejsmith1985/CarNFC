@@ -2,12 +2,13 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { PowerSource } from '@/types/servicecard'
-import { ChevronRight, Fuel, BatteryCharging, Wrench } from 'lucide-react'
+import { ChevronRight, Fuel, BatteryCharging, Wrench, MapPin } from 'lucide-react'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { PassportSharing } from '@/components/PassportSharing'
 import { VehicleSettings } from '@/components/garage/VehicleSettings'
 import { TagRebinder } from '@/components/garage/TagRebinder'
 import { ComponentZonePicker } from '@/components/zones/ComponentZonePicker'
+import { findZone } from '@/lib/zones/zones'
 import { TagMinter } from '@/components/garage/TagMinter'
 import { readShareState } from '@/app/actions/passport'
 import { UNIT_DISTANCE } from '@/lib/constants'
@@ -47,11 +48,24 @@ export default async function VehicleOverviewPage({ params }: PageProps) {
 
   const { data: boundTags } = await supabase
     .from('tags')
-    .select('id, component_id')
+    .select('id, component_id, zone_key')
     .eq('vehicle_id', vehicle.id as string)
     .order('claimed_at', { ascending: true })
 
   const shareState = await readShareState(vehicle.id as string)
+
+  // A zone tag binds to the vehicle and to no component at all, so counting
+  // components alone reports a vehicle with a working tag on it as untagged —
+  // and offers to set up the tag that is already stuck to the bonnet.
+  const zoneTags = (boundTags ?? [])
+    .filter((tag) => tag.zone_key !== null)
+    .map((tag) => ({ id: tag.id as string, zone: findZone(tag.zone_key as string) }))
+    .filter(
+      (tag): tag is { id: string; zone: NonNullable<ReturnType<typeof findZone>> } =>
+        tag.zone !== null,
+    )
+
+  const hasAnyTag = (components?.length ?? 0) > 0 || zoneTags.length > 0
 
   const identity = [vehicle.year, vehicle.make, vehicle.model, vehicle.trim]
     .filter(Boolean)
@@ -79,11 +93,40 @@ export default async function VehicleOverviewPage({ params }: PageProps) {
         </p>
       </header>
 
+      {zoneTags.length > 0 ? (
+        <section className="mb-6" aria-label="Tagged areas">
+          <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-text-secondary">
+            Tagged areas
+          </h2>
+          <ul className="space-y-2">
+            {zoneTags.map((tag) => (
+              <li key={tag.id}>
+                <Link
+                  href={`/v/${vehicle.slug as string}/z/${tag.zone.key}`}
+                  className="flex min-h-touch items-center justify-between gap-3 rounded-card border border-border bg-surface-raised px-4 py-3 active:bg-border"
+                >
+                  <span className="min-w-0">
+                    <span className="flex items-center gap-2 font-semibold">
+                      <MapPin size={16} className="shrink-0 text-text-secondary" aria-hidden />
+                      {tag.zone.label}
+                    </span>
+                    <span className="mt-0.5 block pl-6 text-xs text-text-muted">
+                      {tag.zone.placement}
+                    </span>
+                  </span>
+                  <ChevronRight size={18} className="shrink-0 text-text-muted" aria-hidden />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-text-secondary">
         Tagged components
       </h2>
 
-      {(components?.length ?? 0) === 0 ? (
+      {!hasAnyTag ? (
         /*
           The instructions used to live only on an empty garage, so they
           disappeared the moment someone added their first vehicle — which is
