@@ -32,6 +32,7 @@ supabase/.temp/
 # Environment — never commit real keys (Article IX)
 .env
 .env.local
+.env.production
 .env.*.local
 
 # Logs

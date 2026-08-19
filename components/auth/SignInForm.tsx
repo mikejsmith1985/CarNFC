@@ -12,6 +12,7 @@ import { SIGN_IN_CODE_LENGTH } from '@/lib/validation/auth'
 import {
   clearPendingSignIn,
   formatRemaining,
+  formatSentAt,
   getPendingSignInSnapshot,
   getServerPendingSignInSnapshot,
   parsePendingSignIn,
@@ -68,6 +69,9 @@ export function SignInForm({ nextPath }: SignInFormProps) {
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
+  // Set only when a code is sent from this screen, so the confirmation appears
+  // for the press that caused it rather than on every resumed visit.
+  const [justSent, setJustSent] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   const pending = hasHydrated ? parsePendingSignIn(rawPending) : null
@@ -101,6 +105,8 @@ export function SignInForm({ nextPath }: SignInFormProps) {
         return
       }
       rememberPendingSignIn(requestedEmail)
+      setJustSent(true)
+      setCode('')
     })
   }
 
@@ -154,7 +160,19 @@ export function SignInForm({ nextPath }: SignInFormProps) {
       ) : (
         <>
           <p className="text-sm text-text-secondary">
-            Code sent to <span className="font-semibold text-text-primary">{pending.email}</span>
+            Code sent to <span className="font-semibold text-text-primary">{pending.email}</span> at{' '}
+            <span className="font-semibold text-text-primary">
+              {formatSentAt(pending.sentAtMs)}
+            </span>
+          </p>
+
+          {/*
+            Three sign-in emails look identical in an inbox and only the newest
+            works. Without saying so, the natural response to a rejected code is
+            to request another — which retires the one that would have worked.
+          */}
+          <p className="text-xs text-text-muted">
+            Open the newest email. Asking for another code stops the earlier ones working.
           </p>
 
           <TextField
@@ -190,8 +208,15 @@ export function SignInForm({ nextPath }: SignInFormProps) {
           </Button>
 
           <Button variant="secondary" fullWidth onClick={handleRequestCode} disabled={isPending}>
-            Send a new code
+            {isPending ? 'Sending…' : 'Send a new code'}
           </Button>
+
+          {justSent ? (
+            <p role="status" className="text-sm text-success">
+              New code sent at {formatSentAt(pending.sentAtMs)}. Any earlier code has stopped
+              working.
+            </p>
+          ) : null}
 
           <Button variant="ghost" fullWidth onClick={handleStartOver}>
             Use a different email

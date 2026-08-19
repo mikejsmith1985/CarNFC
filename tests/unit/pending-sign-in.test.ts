@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   clearPendingSignIn,
   formatRemaining,
+  formatSentAt,
   getPendingSignInSnapshot,
   getServerPendingSignInSnapshot,
   parsePendingSignIn,
@@ -186,5 +187,25 @@ describe('formatRemaining', () => {
 
   it('formats zero', () => {
     expect(formatRemaining(0)).toBe('0:00')
+  })
+})
+
+describe('formatSentAt', () => {
+  // Which email to open is otherwise guesswork: three arrive, they look
+  // identical, and only the newest works.
+  it('states the time the code was sent', () => {
+    const at = new Date('2026-08-19T14:29:00').getTime()
+    expect(formatSentAt(at)).toMatch(/2:29/)
+  })
+
+  it('uses a clock people read, not a timestamp', () => {
+    const at = new Date('2026-08-19T09:05:00').getTime()
+    const formatted = formatSentAt(at)
+    expect(formatted).not.toMatch(/T\d{2}:/)
+    expect(formatted).toMatch(/9:05/)
+  })
+
+  it('survives a nonsense timestamp rather than throwing', () => {
+    expect(() => formatSentAt(Number.NaN)).not.toThrow()
   })
 })

@@ -160,6 +160,22 @@ export function secondsRemaining(pending: PendingSignIn, nowMs: number = Date.no
   return Math.max(0, SIGN_IN_CODE_TTL_SECONDS - elapsedSeconds)
 }
 
+/**
+ * The wall-clock time a code was sent, for naming which email to open.
+ *
+ * Three sign-in emails look identical in an inbox and only the newest works, so
+ * the screen has to say which one it means. A timestamp is unreadable at a
+ * glance; the time on a clock is what someone compares against.
+ */
+export function formatSentAt(sentAtMs: number): string {
+  if (!Number.isFinite(sentAtMs)) return 'just now'
+
+  return new Date(sentAtMs).toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
 /** Formats the remaining time as `m:ss` for the countdown beside the field. */
 export function formatRemaining(totalSeconds: number): string {
   const SECONDS_PER_MINUTE = 60

@@ -104,6 +104,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fell on whichever test happened to trigger it, so adding an unrelated file made two
   long-standing tests fail without either of them changing. Every measured module is now
   imported up front, alongside the ICU and schema warm-ups already there.
+- **Nothing said that asking for a new sign-in code kills the old one.** Three emails arrive
+  looking identical, only the newest works, and the natural response to a rejected code is to
+  request another — which destroys the one that would have worked. The code step now names the
+  time the code was sent, so it can be matched against the inbox, states plainly that asking
+  for another stops earlier ones working, and confirms a resend with its own time rather than
+  leaving a restarted countdown as the only clue.
 - **A card with no signal said the part did not exist.** With no connection and no saved copy
   there is nothing to render, and the app fell through to a plain not-found page — telling
   someone standing at their own vehicle that the part is not there, when the truth is only that
