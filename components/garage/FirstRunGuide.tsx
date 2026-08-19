@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import { Nfc, Car, MapPin, Wrench, ChevronDown } from 'lucide-react'
 import { hydrationMarker, useIsHydrated } from '@/components/ui/useIsHydrated'
+import { TagMinter } from '@/components/garage/TagMinter'
 
 interface FirstRunGuideProps {
   /** Where a tag points, so the instructions can show a real address. */

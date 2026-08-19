@@ -104,6 +104,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fell on whichever test happened to trigger it, so adding an unrelated file made two
   long-standing tests fail without either of them changing. Every measured module is now
   imported up front, alongside the ICU and schema warm-ups already there.
+- **A deploy was invisible to anyone already carrying the old app.** A service worker keeps
+  serving what it has until something replaces it, so seeing a fix meant clearing website data by
+  hand — which nobody will do and no customer could be asked to. The app now notices when a new
+  version takes over and reloads itself, checks for one when a backgrounded tab is opened again,
+  and skips the reload on a first visit where nothing is stale.
+- **Blank tags had nowhere to get an address from.** The instructions for writing one ended at
+  "it looks like this", because the only source of a tag address was a script run by hand. An
+  owner can now ask the app for as many as they need, up to a pack, and copy them out to write.
 - **A vehicle had no way to say what its odometer reads.** The figure is derived from the
   highest logged entry, which is right for corrections and useless for a vehicle that has no
   entries yet: a truck bought at 112,450 miles insisted it had never been driven until something

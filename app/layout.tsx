@@ -28,11 +28,17 @@ export const viewport: Viewport = {
   themeColor: '#12151a',
   viewportFit: 'cover',
 }
+import { ServiceWorkerUpdater } from '@/components/ServiceWorkerUpdater'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-dvh bg-surface text-text-primary antialiased">{children}</body>
+      <body className="min-h-dvh bg-surface text-text-primary antialiased">
+        {/* Notices a deploy and replaces the stale app, so nobody has to clear
+            website data by hand to see a fix. */}
+        <ServiceWorkerUpdater />
+        {children}
+      </body>
     </html>
   )
 }

@@ -51,6 +51,7 @@ import { spokenToNumber } from '@/lib/voice/number-words'
 import { interpretUtterance } from '@/lib/voice/transcript'
 import { getDictationScript } from '@/lib/voice/dictation-script'
 import { parsePendingSignIn } from '@/lib/auth/pending-sign-in'
+import { clampTagBatchSize } from '@/lib/tags/batch'
 
 computeNextDue({
   lastServiceOdometer: 0,
@@ -64,3 +65,4 @@ spokenToNumber('one')
 interpretUtterance('skip', 'text')
 getDictationScript('maintenance')
 parsePendingSignIn(null)
+clampTagBatchSize(1)
