@@ -5,7 +5,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { SignOutButton } from '@/components/SignOutButton'
 import { SyncIndicator } from '@/components/SyncIndicator'
 import { AddVehicleSheet } from '@/components/garage/AddVehicleSheet'
-import { FirstRunGuide } from '@/components/garage/FirstRunGuide'
+import { SetupChecklist } from '@/components/onboarding/SetupChecklist'
 import { UNIT_DISTANCE } from '@/lib/constants'
 import type { PowerSource } from '@/types/servicecard'
 
@@ -33,6 +33,23 @@ export default async function GaragePage() {
     .select('id, slug, nickname, year, make, model, trim, power_source, current_odometer')
     .order('created_at', { ascending: true })
 
+  // The checklist reads what the account actually contains rather than a flag
+  // saying a tour was watched, so it cannot claim work that was never done.
+  const { data: ownedTags } = await supabase.from('tags').select('vehicle_id')
+  const { count: serviceCount } = await supabase
+    .from('service_entries')
+    .select('id', { count: 'exact', head: true })
+  const { count: energyCount } = await supabase
+    .from('energy_entries')
+    .select('id', { count: 'exact', head: true })
+
+  const progress = {
+    vehicleCount: vehicles?.length ?? 0,
+    reservedTagCount: (ownedTags ?? []).filter((tag) => tag.vehicle_id === null).length,
+    boundTagCount: (ownedTags ?? []).filter((tag) => tag.vehicle_id !== null).length,
+    entryCount: (serviceCount ?? 0) + (energyCount ?? 0),
+  }
+
   return (
     <main className="mx-auto min-h-dvh w-full max-w-xl pb-8">
       <SyncIndicator />
@@ -50,12 +67,16 @@ export default async function GaragePage() {
           <SignOutButton />
         </header>
 
+        <div className="mb-6">
+          <SetupChecklist
+            progress={progress}
+            appUrl={process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.rootlevellabs.tech'}
+            firstVehicleSlug={(vehicles?.[0]?.slug as string | undefined) ?? null}
+          />
+        </div>
+
         {(vehicles?.length ?? 0) === 0 ? (
           <div className="space-y-4">
-            <FirstRunGuide
-              appUrl={process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.rootlevellabs.tech'}
-            />
-
             <div className="rounded-card border border-dashed border-border-strong px-4 py-10 text-center">
               <Car size={32} className="mx-auto text-text-muted" aria-hidden />
               <p className="mt-3 text-sm font-semibold text-text-secondary">Nothing here yet</p>

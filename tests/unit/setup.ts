@@ -52,6 +52,7 @@ import { interpretUtterance } from '@/lib/voice/transcript'
 import { getDictationScript } from '@/lib/voice/dictation-script'
 import { parsePendingSignIn } from '@/lib/auth/pending-sign-in'
 import { clampTagBatchSize } from '@/lib/tags/batch'
+import { buildOnboardingSteps } from '@/lib/onboarding/steps'
 
 computeNextDue({
   lastServiceOdometer: 0,
@@ -66,3 +67,9 @@ interpretUtterance('skip', 'text')
 getDictationScript('maintenance')
 parsePendingSignIn(null)
 clampTagBatchSize(1)
+buildOnboardingSteps({
+  vehicleCount: 0,
+  reservedTagCount: 0,
+  boundTagCount: 0,
+  entryCount: 0,
+})

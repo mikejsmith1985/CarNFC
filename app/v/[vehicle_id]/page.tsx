@@ -143,6 +143,9 @@ export default async function VehicleOverviewPage({ params }: PageProps) {
             <TagMinter
               appUrl={process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.rootlevellabs.tech'}
             />
+            <p className="mt-3 text-xs text-text-muted">
+              Bought one ready-made? Stick it on and tap it — nothing to set up.
+            </p>
           </div>
         </div>
       ) : (
