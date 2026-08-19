@@ -104,6 +104,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fell on whichever test happened to trigger it, so adding an unrelated file made two
   long-standing tests fail without either of them changing. Every measured module is now
   imported up front, alongside the ICU and schema warm-ups already there.
+- **Tag instructions disappeared the moment a vehicle was added.** They lived only on an empty
+  garage, so they vanished exactly when someone was about to put a tag on the vehicle they had
+  just created — leaving a page that said "no tags yet" and offered no way to get one. The offer
+  now sits on the vehicle itself, where the tag is about to go.
+- Plainer words throughout tag setup. "Get tag addresses" is now "Set up a blank tag", and the
+  copy speaks only of links, tags and writing — nobody sticking a badge on a truck needs to know
+  what a tag contains.
 - **A deploy was invisible to anyone already carrying the old app.** A service worker keeps
   serving what it has until something replaces it, so seeing a fix meant clearing website data by
   hand — which nobody will do and no customer could be asked to. The app now notices when a new

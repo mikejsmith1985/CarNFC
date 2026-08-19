@@ -1,4 +1,4 @@
-// Gives an owner with blank tags an address to write to them.
+// Gives an owner with blank tags a link to write to them.
 'use client'
 
 import { useState, useTransition } from 'react'
@@ -16,11 +16,15 @@ interface TagMinterProps {
 }
 
 /**
- * Mints tag addresses for blank hardware.
+ * Hands over a link to write to a blank tag.
  *
  * A ready-made tag arrives already written. A blank one is useless until the
- * product hands over an address, and until now the only source was a script —
- * so the instructions for writing a tag ended at "it looks like this".
+ * product hands over a link, and until now the only source was a script — so
+ * the instructions for writing a tag ended at "it looks like this".
+ *
+ * Deliberately says "link" and never "identifier", "address" or "mint". Nobody
+ * sticking a badge on a truck needs to know what a tag contains; they need to
+ * know what to press and what to paste.
  */
 export function TagMinter({ appUrl }: TagMinterProps) {
   const isReady = useIsHydrated()
@@ -53,7 +57,7 @@ export function TagMinter({ appUrl }: TagMinterProps) {
       <div className="flex items-end gap-2">
         <div className="w-28">
           <TextField
-            label="How many"
+            label="How many tags?"
             type="number"
             inputMode="numeric"
             min={1}
@@ -69,7 +73,7 @@ export function TagMinter({ appUrl }: TagMinterProps) {
           disabled={isMinting}
           className="flex-1"
         >
-          {isMinting ? 'Getting…' : 'Get tag addresses'}
+          {isMinting ? 'Setting up…' : 'Set up a blank tag'}
         </Button>
       </div>
 
@@ -89,12 +93,12 @@ export function TagMinter({ appUrl }: TagMinterProps) {
             icon={hasCopied ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
             onClick={handleCopy}
           >
-            {hasCopied ? 'Copied' : addresses.length === 1 ? 'Copy address' : 'Copy all'}
+            {hasCopied ? 'Copied' : addresses.length === 1 ? 'Copy link' : 'Copy all links'}
           </Button>
 
           <p className="text-xs text-text-muted">
-            Write one address per tag. Each works only once — a second tag with the same address
-            opens the same part.
+            Write one link to each tag. Two tags with the same link open the same part, so give
+            every tag its own.
           </p>
         </div>
       ) : null}

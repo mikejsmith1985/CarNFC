@@ -7,7 +7,7 @@ import { hydrationMarker, useIsHydrated } from '@/components/ui/useIsHydrated'
 import { TagMinter } from '@/components/garage/TagMinter'
 
 interface FirstRunGuideProps {
-  /** Where a tag points, so the instructions can show a real address. */
+  /** Where a tag points, so the instructions can show a real link. */
   appUrl: string
 }
 
@@ -77,7 +77,7 @@ export function FirstRunGuide({ appUrl }: FirstRunGuideProps) {
             <ol className="list-decimal space-y-1.5 pl-5">
               <li>Choose Write, then add a URL record.</li>
               <li>
-                Enter your tag&apos;s address — it looks like{' '}
+                Paste the link from below — it looks like{' '}
                 <span className="tabular break-all text-text-primary">{appUrl}/t/…</span>
               </li>
               <li>Hold the tag to the top of your phone until it confirms.</li>

@@ -8,6 +8,7 @@ import { PassportSharing } from '@/components/PassportSharing'
 import { VehicleSettings } from '@/components/garage/VehicleSettings'
 import { TagRebinder } from '@/components/garage/TagRebinder'
 import { ComponentZonePicker } from '@/components/zones/ComponentZonePicker'
+import { TagMinter } from '@/components/garage/TagMinter'
 import { readShareState } from '@/app/actions/passport'
 import { UNIT_DISTANCE } from '@/lib/constants'
 
@@ -83,9 +84,24 @@ export default async function VehicleOverviewPage({ params }: PageProps) {
       </h2>
 
       {(components?.length ?? 0) === 0 ? (
-        <p className="rounded-card border border-dashed border-border-strong px-4 py-8 text-center text-sm text-text-muted">
-          No tags claimed on this vehicle yet.
-        </p>
+        /*
+          The instructions used to live only on an empty garage, so they
+          disappeared the moment someone added their first vehicle — which is
+          precisely when they are about to put a tag on it.
+        */
+        <div className="rounded-card border border-dashed border-border-strong px-4 py-6">
+          <p className="text-center text-sm text-text-muted">
+            No tags on this vehicle yet. Stick one on a part, or somewhere you reach several parts
+            from, then tap it with your phone.
+          </p>
+
+          <div className="mt-5 border-t border-border pt-4">
+            <p className="mb-3 text-sm font-semibold text-text-primary">Got a blank tag?</p>
+            <TagMinter
+              appUrl={process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.rootlevellabs.tech'}
+            />
+          </div>
+        </div>
       ) : (
         <ul className="space-y-2">
           {(components ?? []).map((component) => {
