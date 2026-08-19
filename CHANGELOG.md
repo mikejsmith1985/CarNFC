@@ -104,6 +104,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fell on whichever test happened to trigger it, so adding an unrelated file made two
   long-standing tests fail without either of them changing. Every measured module is now
   imported up front, alongside the ICU and schema warm-ups already there.
+- **A production side, so tags can exist before their owners do.** Everything until now assumed
+  a signed-in owner acting on their own vehicle; manufacturing has neither. Tags are made in
+  hundreds, written by an encoder and shipped to people who have never opened the app, and the
+  only way to make one was a script run by hand with the service-role key against a laptop. There
+  is now an admin page that mints a run, names it, and produces the encoder file with it — because
+  a run whose identifiers were never exported is several hundred rows nobody can write to
+  hardware. Each run shows how many of its tags have been claimed, which is the only signal that
+  hardware reached somebody and worked. Reachable only by an account explicitly marked as an
+  admin, and a 404 to everyone else rather than a refusal, since a refusal confirms the page
+  exists.
 - **Real onboarding, driven by what the account contains.** The first attempt was instructions
   and a button — it explained the product without moving anyone through it, and vanished the
   moment a vehicle existed. A setup checklist now tracks four steps: add the vehicle, get a tag

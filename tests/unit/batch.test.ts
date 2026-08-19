@@ -1,7 +1,13 @@
 // Unit tests for how many tag addresses an owner may mint at once.
 
 import { describe, expect, it } from 'vitest'
-import { clampTagBatchSize, MAX_TAG_BATCH, MIN_TAG_BATCH } from '@/lib/tags/batch'
+import {
+  clampTagBatchSize,
+  clampProductionBatchSize,
+  MAX_TAG_BATCH,
+  MAX_PRODUCTION_BATCH,
+  MIN_TAG_BATCH,
+} from '@/lib/tags/batch'
 
 describe('clampTagBatchSize', () => {
   it('keeps a sensible request as asked', () => {
@@ -32,5 +38,19 @@ describe('clampTagBatchSize', () => {
 
   it('survives nonsense', () => {
     expect(clampTagBatchSize(Number.NaN)).toBe(MIN_TAG_BATCH)
+  })
+})
+
+describe('clampProductionBatchSize', () => {
+  it('allows a print run of hundreds', () => {
+    expect(clampProductionBatchSize(500)).toBe(500)
+  })
+
+  it('stops short of minting a warehouse', () => {
+    expect(clampProductionBatchSize(50_000)).toBe(MAX_PRODUCTION_BATCH)
+  })
+
+  it('still refuses nothing', () => {
+    expect(clampProductionBatchSize(0)).toBe(MIN_TAG_BATCH)
   })
 })
