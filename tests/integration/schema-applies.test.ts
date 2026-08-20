@@ -25,6 +25,7 @@ describe('schema applies', () => {
       'service_entries',
       'service_entry_revisions',
       'spec_overrides',
+      'tag_batches',
       'tags',
       'vehicles',
     ])

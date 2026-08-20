@@ -2,10 +2,14 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { MapPin, ChevronLeft, Car, ChevronRight } from 'lucide-react'
+import type { PowerSource } from '@/types/servicecard'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { SyncIndicator } from '@/components/SyncIndicator'
 import { ZoneQuickActions } from '@/components/zones/ZoneQuickActions'
+import { AddParts } from '@/components/garage/AddParts'
 import { componentsInZone, findZone } from '@/lib/zones/zones'
+import { missingTemplatesForZone } from '@/lib/zones/zone-setup'
+import { loadComponentLibrary } from '@/lib/components/library'
 import { computeNextDue } from '@/lib/calc/reminders'
 import { UNIT_DISTANCE } from '@/lib/constants'
 
@@ -36,7 +40,7 @@ export default async function ZoneLandingPage({ params }: PageProps) {
 
   const { data: vehicle } = await supabase
     .from('vehicles')
-    .select('id, slug, nickname, year, make, model, trim, current_odometer')
+    .select('id, slug, nickname, year, make, model, trim, power_source, current_odometer')
     .eq('slug', vehicleSlug)
     .maybeSingle()
 
@@ -81,6 +85,16 @@ export default async function ZoneLandingPage({ params }: PageProps) {
     }),
   )
 
+  // Offered when the zone is empty: the parts this badge is supposed to cover
+  // that the vehicle has not been given yet, so the badge can fill itself in
+  // rather than sending someone to a vehicle page that cannot help either.
+  const missingParts = missingTemplatesForZone(
+    zone,
+    await loadComponentLibrary(supabase),
+    vehicle.power_source as PowerSource,
+    (components ?? []).map((component) => component.template_key as string | null),
+  )
+
   const identity = [vehicle.year, vehicle.make, vehicle.model, vehicle.trim]
     .filter(Boolean)
     .join(' ')
@@ -116,21 +130,25 @@ export default async function ZoneLandingPage({ params }: PageProps) {
       </header>
 
       {inZone.length === 0 ? (
-        <section className="px-4 py-10 text-center">
-          <p className="text-sm font-semibold text-text-secondary">
-            Nothing tagged in this zone yet
-          </p>
-          <p className="mt-1 text-sm text-text-muted">
-            Add the parts you work on here and this badge opens straight to them.
-          </p>
+        <div className="px-4 py-6">
+          <AddParts
+            vehicleId={vehicle.id as string}
+            heading={`Set up ${zone.label}`}
+            description="Tick what you actually service here. Each one becomes a button on this badge, with its intervals already filled in."
+            parts={missingParts.map((template) => ({ ...template, isPreselected: true }))}
+            actionLabel="Set up this area"
+            canNameOwnPart
+            zoneKey={zone.key}
+          />
+
           <Link
             href={`/v/${vehicle.slug as string}`}
-            className="mt-4 inline-flex min-h-touch items-center gap-1 rounded-card border border-border-strong px-4 text-sm font-semibold text-text-primary"
+            className="mt-4 flex min-h-touch items-center justify-between rounded-card border border-border px-3 text-sm text-text-secondary"
           >
-            Open {(vehicle.nickname as string | null) || 'this vehicle'}
+            Open {(vehicle.nickname as string | null) || 'this vehicle'} instead
             <ChevronRight size={16} aria-hidden />
           </Link>
-        </section>
+        </div>
       ) : (
         <ZoneQuickActions
           vehicleSlug={vehicle.slug as string}

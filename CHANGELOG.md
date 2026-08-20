@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Forge Workflow initialized with Forge Terminal Workflow Architect
 - Next.js 16 toolchain: TypeScript, Tailwind CSS 4 (CSS-first), ESLint enforcing the
   Article IV naming and complexity rules, Prettier, and a Vitest configuration split into
@@ -118,7 +119,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and a button — it explained the product without moving anyone through it, and vanished the
   moment a vehicle existed. A setup checklist now tracks four steps: add the vehicle, get a tag
   ready, stick it on and tap it, log a job. Each is marked done by reading the data, so it cannot
-  congratulate someone for work they never did, and it points at the first *unfinished* step
+  congratulate someone for work they never did, and it points at the first _unfinished_ step
   rather than insisting on its own order. The step being worked on opens the thing it needs —
   the add-vehicle sheet, the tag link — and the whole list disappears once nothing is left.
 - **A zone tag was invisible on the vehicle it was stuck to.** The page counted components, and
@@ -240,6 +241,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   responsive layout.
 
 ### Changed
+
 - **Cloudflare Workers deployment** via OpenNext, matching how rootlevellabs.tech is already
   served. `wrangler.jsonc` carries only public values; the service-role key is set with
   `wrangler secret put` so it never reaches the repository or a build log.
@@ -254,6 +256,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   not meaningfully have.
 
 ### Fixed
+
+- **A zone badge on a fresh vehicle was a dead end you could walk in circles inside.** A part
+  only ever came into existence by claiming a tag stuck to it, so a vehicle set up with one
+  area badge and no per-part tags had no parts at all. The badge opened to "Nothing tagged in
+  this zone yet", whose only button led to the vehicle page, which showed an empty list and
+  offered no way to add anything — and whose only area link led back to the badge. Parts and
+  tags are now separate concerns: a part can exist with no tag on it.
+  - The empty zone screen offers the parts that area is supposed to cover, pre-ticked, and
+    creates them in one press with their service intervals and specs already filled in.
+  - The vehicle page carries the same picker permanently, minus whatever the vehicle already
+    has, plus a free-text field for anything the library does not cover.
+  - `claim_tag` and the two new entry points share one `create_component_for_vehicle`
+    builder, so a part created by a tag and a part created by hand are the same thing —
+    same slug rules, same template specs, same intervals.
+  - Adding a part the vehicle already has is skipped rather than rejected, so pressing the
+    button twice on a slow connection cannot produce two engine oil cards.
+  - A part named from a badge is placed in that badge's area. Without a template nothing can
+    infer where it sits, and it would have been invisible to the screen that created it.
+- **The vehicle page listed nothing under a heading when only an area badge was claimed.**
+  It now says so, and says what to do about it.
+- **The schema table list did not know about `tag_batches`**, so the integration suite failed
+  on a table the previous change had legitimately added.
 
 - **A UX spec was breaking four unrelated tests in the next spec.** The tag-move test moved
   the seeded front-differential tag and put it back at the end — a restore that only runs when
@@ -305,7 +329,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   was held only in component state, so returning to the tab landed on an empty email field
   having just been sent a perfectly good code. On a phone the tab is often discarded
   outright while the mail app is open, so the record now lives in `localStorage`, and the
-  step is *derived* from it rather than mirrored into state: sending a code writes the
+  step is _derived_ from it rather than mirrored into state: sending a code writes the
   record and the form follows, and the record lapsing or being cleared returns the form to
   the email step on its own. There is no second copy of the truth to fall out of step, and
   a code sent in another tab moves this one. The remaining validity is shown as a live
@@ -328,7 +352,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `supabase/templates/magic-link.html` supplies both the code and the link. This applies to
   hosted Supabase as well, not only the local stack.
 - **No table privileges existed at all — the application was dead on arrival.** Row Level
-  Security decides which *rows* a role may touch; it does not grant permission to touch the
+  Security decides which _rows_ a role may touch; it does not grant permission to touch the
   table, and PostgreSQL refuses the statement before any policy is consulted. The schema
   relied on Supabase's ambient default privileges, which attach to a specific creating role
   and do not extend to tables created by the migration role, so every query for every role

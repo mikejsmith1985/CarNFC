@@ -47,6 +47,7 @@ vehicleSchema.safeParse({})
 import { computeNextDue } from '@/lib/calc/reminders'
 import { isTestAuthAllowed } from '@/lib/test-support/test-auth-gate'
 import { componentsInZone, listZones } from '@/lib/zones/zones'
+import { missingTemplatesForZone } from '@/lib/zones/zone-setup'
 import { spokenToNumber } from '@/lib/voice/number-words'
 import { interpretUtterance } from '@/lib/voice/transcript'
 import { getDictationScript } from '@/lib/voice/dictation-script'
@@ -62,6 +63,7 @@ computeNextDue({
 })
 isTestAuthAllowed({ nodeEnv: 'test', enableTestAuth: undefined, requestHost: null })
 componentsInZone(listZones()[0]!, [])
+missingTemplatesForZone(listZones()[0]!, [], 'gasoline', [])
 spokenToNumber('one')
 interpretUtterance('skip', 'text')
 getDictationScript('maintenance')

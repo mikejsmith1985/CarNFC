@@ -8,7 +8,10 @@ import { PassportSharing } from '@/components/PassportSharing'
 import { VehicleSettings } from '@/components/garage/VehicleSettings'
 import { TagRebinder } from '@/components/garage/TagRebinder'
 import { ComponentZonePicker } from '@/components/zones/ComponentZonePicker'
+import { AddParts } from '@/components/garage/AddParts'
 import { findZone } from '@/lib/zones/zones'
+import { loadComponentLibrary } from '@/lib/components/library'
+import { filterCompatibleTemplates } from '@/lib/claim/compatibility'
 import { TagMinter } from '@/components/garage/TagMinter'
 import { readShareState } from '@/app/actions/passport'
 import { UNIT_DISTANCE } from '@/lib/constants'
@@ -53,6 +56,21 @@ export default async function VehicleOverviewPage({ params }: PageProps) {
     .order('claimed_at', { ascending: true })
 
   const shareState = await readShareState(vehicle.id as string)
+
+  // A part exists whether or not a tag points at it, so the library is offered
+  // here too. Anything already on the vehicle drops out, which keeps the list
+  // shrinking as the vehicle fills in rather than repeating itself.
+  const existingTemplateKeys = new Set(
+    (components ?? [])
+      .map((component) => component.template_key as string | null)
+      .filter((key): key is string => key !== null),
+  )
+  const availableParts = filterCompatibleTemplates(
+    (await loadComponentLibrary(supabase)).filter(
+      (template) => !existingTemplateKeys.has(template.key),
+    ),
+    vehicle.power_source as PowerSource,
+  )
 
   // A zone tag binds to the vehicle and to no component at all, so counting
   // components alone reports a vehicle with a working tag on it as untagged —
@@ -148,6 +166,16 @@ export default async function VehicleOverviewPage({ params }: PageProps) {
             </p>
           </div>
         </div>
+      ) : (components?.length ?? 0) === 0 ? (
+        /*
+          A zone badge is on the vehicle but no parts have been created, so the
+          list underneath would otherwise be a heading with nothing beneath it —
+          and no hint that parts are the thing still missing.
+        */
+        <p className="rounded-card border border-dashed border-border-strong px-4 py-6 text-center text-sm text-text-muted">
+          No parts yet. Add the ones you service below and they show up here, and on any area badge
+          that covers them.
+        </p>
       ) : (
         <ul className="space-y-2">
           {(components ?? []).map((component) => {
@@ -177,6 +205,14 @@ export default async function VehicleOverviewPage({ params }: PageProps) {
       )}
 
       <div className="mt-8 space-y-6">
+        <AddParts
+          vehicleId={vehicle.id as string}
+          heading="Add parts"
+          description="Pick what you service on this vehicle. Each one gets a card with its intervals filled in — no tag needed."
+          parts={availableParts.map((template) => ({ ...template, isPreselected: false }))}
+          canNameOwnPart
+        />
+
         <PassportSharing
           vehicleId={vehicle.id as string}
           initiallyShared={shareState.isShared}
