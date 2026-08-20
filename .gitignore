@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+.next/
+.open-next/
+.wrangler/
+out/
+dist/
+build/
+next-env.d.ts
+
+# Generated service worker (Serwist emits these at build time)
+public/sw.js
+public/sw.js.map
+public/swe-worker-*.js
+
+# Testing
+coverage/
+.nyc_output/
+cypress/screenshots/
+cypress/videos/
+tests/ux/screenshots/
+tests/ux/videos/
+
+# Supabase local stack
+supabase/.branches/
+supabase/.temp/
+
+# Environment — never commit real keys (Article IX)
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+
+# Vercel / deployment
+.vercel
+
+# TypeScript
+*.tsbuildinfo

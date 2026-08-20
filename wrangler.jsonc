@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "servicecard",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-04-18",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+
+  "observability": {
+    "enabled": true
+  },
+
+  // The address printed onto physical hardware. It must never change: a tag
+  // stuck to a frame rail cannot be reprogrammed, and the name of the product
+  // is deliberately absent from it so the product can be renamed without
+  // stranding every tag ever sold.
+  "routes": [{ "pattern": "app.rootlevellabs.tech", "custom_domain": true }],
+
+  // Public values only. The service-role key is set with
+  // `wrangler secret put SUPABASE_SERVICE_ROLE_KEY` so it never enters this
+  // file, the repository, or a build log (Article IX).
+  "vars": {
+    "NEXT_PUBLIC_APP_URL": "https://app.rootlevellabs.tech"
+  }
+}

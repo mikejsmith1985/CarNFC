@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.open-next/
+.wrangler/
+out/
+dist/
+build/
+coverage/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+supabase/.branches/
+supabase/.temp/
+*.min.js

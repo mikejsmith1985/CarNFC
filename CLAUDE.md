@@ -7,4 +7,45 @@
 @.specify/memory/constitution.md
 
 <!-- SPECKIT START -->
+
+## Active Feature: ServiceCard — Automotive NFC Companion
+
+**Branch**: `feature/servicecard-nfc-pwa` | **Plan**: `specs/001-servicecard-nfc-pwa/plan.md`
+
+| Artifact | Path |
+|---|---|
+| Specification (75 FRs, 15 SCs) | `specs/001-servicecard-nfc-pwa/spec.md` |
+| Implementation plan | `specs/001-servicecard-nfc-pwa/plan.md` |
+| Research decisions | `specs/001-servicecard-nfc-pwa/research.md` |
+| Data model & RLS | `specs/001-servicecard-nfc-pwa/data-model.md` |
+| Interface contracts | `specs/001-servicecard-nfc-pwa/contracts/` |
+| Setup & validation guide | `specs/001-servicecard-nfc-pwa/quickstart.md` |
+
+### Stack (versions verified against the npm registry, 2026-08-13)
+
+Next.js `16.3.0` App Router · React `19.2.8` · TypeScript `7.0.2` · Tailwind CSS `4.3.3` ·
+`lucide-react` `1.31.0` · Supabase (`supabase-js` `2.112.3`, `ssr` `0.12.4`) ·
+Serwist `9.5.12` · `idb` `8.0.3` · Zod `4.4.3` ·
+Vitest `4.1.10` / testcontainers `12.1.0` / Cypress `15.20.1` + `cypress-real-events`
+
+### Non-obvious rules for this codebase
+
+- **Next 16 route `params` is a Promise** — `const { vehicle_id } = await params`. Next 14 synchronous shape fails at runtime.
+- **Tailwind 4 is CSS-first** — theme lives in an `@theme` block in `app/globals.css`. A `tailwind.config.js` is silently ignored.
+- **Revision tables are append-only** — no role holds UPDATE or DELETE. Edits write a superseding revision; deletes write a tombstone.
+- **Ordering uses `server_received_at` only** — device clocks are never consulted for precedence.
+- **Revision IDs are client-generated UUIDv7** — this is what makes sync exactly-once via `ON CONFLICT (id) DO NOTHING`.
+- **`resolve_tag` and `get_public_passport` are `SECURITY DEFINER`** — the only unauthenticated data paths. Redaction happens in SQL, never in the client.
+- **UX tests launch via `scripts/run-dev-clean.ps1`** and use `cypress-real-events`, never synthetic events.
+
 <!-- SPECKIT END -->
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

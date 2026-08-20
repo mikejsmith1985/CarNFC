@@ -86,8 +86,62 @@ $testCandidates = { param($leaf, $ext)
         default { return @() }
     }
 }
+# ── COVERAGE POLICY ─────────────────────────────────────────────────────
+# Article V separates tests into three layers, so "does this file have a
+# co-located test?" is the right question only for pure logic. .forge/test-
+# coverage-policy.json says which layer covers which paths; the gate below
+# enforces coverage in the layer that actually applies. Absent the file, the
+# original co-located rule applies unchanged.
+$policyPath = ".forge/test-coverage-policy.json"
+$policy = $null
+if (Test-Path $policyPath) {
+    try { $policy = Get-Content $policyPath -Raw | ConvertFrom-Json } catch { $policy = $null }
+}
+
+$matchesPrefix = { param($f, $prefixes)
+    if (-not $prefixes) { return $false }
+    foreach ($prefix in $prefixes) { if ($f -like "$prefix*") { return $true } }
+    return $false
+}
+$matchesPattern = { param($f, $patterns)
+    if (-not $patterns) { return $false }
+    $name = [System.IO.Path]::GetFileName($f)
+    foreach ($pattern in $patterns) { if ($name -like $pattern -or $f -like $pattern) { return $true } }
+    return $false
+}
+# A layer counts as present only if it actually contains tests — an empty
+# directory must not be able to wave a file through.
+$layerHasTests = { param($layerDir)
+    if (-not (Test-Path $layerDir)) { return $false }
+    $found = Get-ChildItem -Path $layerDir -Recurse -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -match '\.(test|spec|cy)\.(ts|tsx|js|jsx)$' } | Select-Object -First 1
+    return $null -ne $found
+}
+
 foreach ($newFile in $newSourceFiles) {
     if (& $isTestFile $newFile) { continue }
+
+    if ($policy) {
+        # Declarations, config and operational tooling carry no product logic.
+        if ((& $matchesPrefix $newFile $policy.notSourceLogic.prefixes) -or
+            (& $matchesPattern $newFile $policy.notSourceLogic.patterns)) { continue }
+
+        # Covered by another Article V layer: require that layer to have tests.
+        $delegated = $false
+        foreach ($rule in $policy.coveredByLayer) {
+            if ($newFile -like "$($rule.prefix)*") {
+                if (& $layerHasTests $rule.layer) {
+                    $delegated = $true
+                } else {
+                    $violations += "TEST FILE: '$newFile' is covered by $($rule.layer), which contains no tests"
+                    $delegated = $true
+                }
+                break
+            }
+        }
+        if ($delegated) { continue }
+    }
+
     $extension = [System.IO.Path]::GetExtension($newFile)
     $leaf = [System.IO.Path]::GetFileNameWithoutExtension($newFile)
     $hasTest = $false
